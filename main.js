@@ -3,7 +3,7 @@ var page = require('webpage').create(),
 	time = Date.now(),
 
 	browserInfo = {
-		url: "http://localhost:3000",
+		url: "http://localhost:8080",
 		// url: "https://dartnote.com/posts",
 		imageInfo: {
 			directory: 'images/',
@@ -22,15 +22,6 @@ var page = require('webpage').create(),
 
 // add server response timeout handler
 page.settings.resourceTimeout = 60000;
-page.onResourceTimeout = function(request) {
-	add_message("error", "ResourceTimeout (60s)");
-	render_message();
-};
-
-//this listenter could make javascript console.log in web show on terminal!
-page.onConsoleMessage = function(msg) {
-	console.log(msg);
-};
 
 // the size of browser
 page.viewportSize = {
@@ -46,21 +37,38 @@ page.clipRect = {
 	height: browserInfo.clipSize.height
 };
 
+page.onResourceTimeout = function(request) {
+	add_message("error", "ResourceTimeout (60s)");
+	render_message();
+};
+
+//this listenter could make javascript console.log in web show on terminal!
+page.onConsoleMessage = function(msg) {
+	console.log(msg);
+};
+
 // main javascrpit part
 page.open(browserInfo.url, function(status) {
 	console.log("Status: " + status);
 	if (status === "success") {
-		page.render(browserInfo.imageInfo.directory + browserInfo.imageInfo.name + browserInfo.imageInfo.type);
 
-		page.includeJs("https://code.jquery.com/jquery-3.2.1.min.js", function() {
-			page.evaluate(function() {
-				console.log(typeof $);
-				$("button").click();
+		window.setTimeout(function() {
+			// page.render(browserInfo.imageInfo.directory + browserInfo.imageInfo.name + browserInfo.imageInfo.type);
+
+			var inputValue = page.evaluate(function() {
+				document.querySelector("#nzc-header-account").value = 'flycchung';
+				document.querySelector("#nzc-header-password").value = '123qwe';
+				document.querySelector("#nzc-header-login").click();
 			});
-			phantom.exit();
-		});
 
-		console.log(JSON.stringify('divs'));
+			setTimeout(function() {
+
+				page.render(browserInfo.imageInfo.directory + browserInfo.imageInfo.name + browserInfo.imageInfo.type);
+				phantom.exit();
+
+			}, 3000);
+
+		}, 3000);
 
 	} else {
 		console.log("Load Page Failed!");
