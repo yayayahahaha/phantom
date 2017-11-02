@@ -2,6 +2,7 @@ var page = require('webpage').create(),
 	system = require('system'),
 	time = Date.now(),
 	captureNumber = 0,
+	captureSort = 0,
 	browserInfo = {
 		url: "http://localhost:8080",
 		// url: "https://dartnote.com/posts",
@@ -78,7 +79,7 @@ page.onResourceReceived = function(res) {
 		console.log(res.url);
 
 		setTimeout(function() {
-			capture(page, {
+			capture({
 				name: 'fish'
 			});
 			page.evaluate(function() {
@@ -89,7 +90,7 @@ page.onResourceReceived = function(res) {
 
 	if (/apis\/my\/wallet\/transfer/.test(res.url)) {
 		setTimeout(function() {
-			capture(page, {
+			capture({
 				name: 'click_transfer'
 			});
 
@@ -99,8 +100,9 @@ page.onResourceReceived = function(res) {
 	}
 };
 
-function capture(page, imageInfo) {
+function capture(imageInfo) {
 	captureNumber++;
+	captureSort++;
 	imageInfo = imageInfo ? imageInfo : {};
 	imageInfo.name = imageInfo.name ? (function() {
 		captureNumber--;
@@ -109,8 +111,9 @@ function capture(page, imageInfo) {
 	imageInfo.type = imageInfo.type ? imageInfo.type : '.png';
 	imageInfo.directory = imageInfo.directory ? imageInfo.directory : 'images/';
 	try {
-		page.render(imageInfo.directory + imageInfo.name + imageInfo.type);
-		console.log("Capture: " + imageInfo.directory + imageInfo.name + imageInfo.type + "\n");
+		var imagePath = imageInfo.directory + captureSort + '_' + imageInfo.name + imageInfo.type;
+		page.render(imagePath);
+		console.log("Capture: " + imagePath + "\n");
 	} catch (e) {
 		console.log("Capture Failed!: " + imageInfo.directory + imageInfo.name + imageInfo.type + "\n");
 	}
@@ -133,10 +136,11 @@ function start() {
 	page.open(browserInfo.url, function(status) {
 		console.log("Status: " + status);
 		if (status === "success") {
+			capture();
+
 			login();
 
 			setTimeout(function() {
-				capture(page, browserInfo.imageInfo);
 				page.evaluate(function() {
 					document.querySelector("#nzc-nav-fish").click();
 				});
@@ -152,7 +156,7 @@ function exit() {
 	console.log('\n**************');
 	console.log('*exit Phantom*');
 	console.log('**************');
-	console.log('total time spend: ' + Math.round(((Date.now() - time) / 100)) / 10 + 'sec');
+	console.log('total time spend: ' + Math.round(((Date.now() - time) / 100)) / 10 + 'sec\n');
 	phantom.exit();
 }
 
