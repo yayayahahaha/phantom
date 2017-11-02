@@ -58,13 +58,13 @@ page.onUrlChanged = function(input) {
 
 page.onLoadFinished = function(input) {
 	console.log('onLoadFinished: ' + input);
-	capture(page);
+	capture();
 };
 
 page.onResourceRequested = function(req) {
 	if (/ag_fish/.test(req.url)) {
 		console.log("onResourceRequested: " + req.url);
-		capture(page);
+		capture();
 	}
 };
 
