@@ -11,34 +11,31 @@ var page = require('webpage').create(),
 			type: '.png'
 		},
 		size: {
-			width: 1920,
-			height: 789
+			width: 1024,
+			height: 400
 		},
 		clipSize: {
-			width: 1920,
-			height: 789
+			width: 1024,
+			height: 400
 		}
 	};
 
 // add server response timeout handler
 page.settings.resourceTimeout = 60000;
 
-
 // the size of browser
-/*page.viewportSize = {
+page.viewportSize = {
 	width: browserInfo.size.width,
 	height: browserInfo.size.height
-};*/
+};
 
 // the clip range of screen shut
-/*page.clipRect = {
+page.clipRect = {
 	top: 0,
 	left: 0,
 	width: browserInfo.clipSize.width,
 	height: browserInfo.clipSize.height
-};*/
-
-
+};
 
 page.onResourceTimeout = function(request) {
 	add_message("error", "ResourceTimeout (60s)");
@@ -50,7 +47,6 @@ page.onConsoleMessage = function(msg) {
 	console.log(msg);
 };
 
-
 page.onUrlChanged = function(input) {
 	console.log('onUrlChanged: ' + input);
 };
@@ -61,6 +57,40 @@ page.onLoadFinished = function(input) {
 	capture(page);
 };
 
+page.onResourceRequested = function(req) {
+	if (/ag_fish/.test(req.url)) {
+		console.log("onResourceRequested: " + req.url);
+		capture(page);
+		// phantom.exit();
+	}
+};
+
+page.onResourceReceived = function(res) {
+	// console.log(res.url);
+	if (/ag_fish/.test(res.url)) {
+		console.log('get fished!');
+		console.log(res.url);
+
+		setTimeout(function() {
+			capture(page, {
+				name: 'fish'
+			});
+			page.evaluate(function() {
+				document.querySelector(".s-pop-container .enter").click();
+			});
+		}, 0);
+	}
+
+	if (/apis\/my\/wallet\/transfer/.test(res.url)) {
+		setTimeout(function() {
+			capture(page, {
+				name: 'click_transfer'
+			});
+			phantom.exit();
+		}, 0);
+	}
+};
+
 
 // main javascrpit part
 page.open(browserInfo.url, function(status) {
@@ -68,7 +98,6 @@ page.open(browserInfo.url, function(status) {
 	if (status === "success") {
 
 		setTimeout(function() {
-
 			page.evaluate(function() {
 				document.querySelector("#nzc-header-account").value = 'flycchung';
 				document.querySelector("#nzc-header-password").value = '123qwe';
@@ -77,26 +106,11 @@ page.open(browserInfo.url, function(status) {
 
 			setTimeout(function() {
 				capture(page, browserInfo.imageInfo);
-
 				page.evaluate(function() {
 					document.querySelector("#nzc-nav-fish").click();
 				});
-
-				setTimeout(function() {
-					console.log("click fished");
-					capture(page);
-
-					setTimeout(function() {
-						console.log('another 3sec');
-						capture(page);
-						phantom.exit();
-					}, 3000);
-
-				}, 3000);
-
 			}, 1000);
-
-		}, 3000);
+		}, 0);
 
 	} else {
 		console.log("Load Page Failed!");
