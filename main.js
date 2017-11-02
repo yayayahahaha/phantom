@@ -7,7 +7,7 @@ var page = require('webpage').create(),
 		// url: "https://dartnote.com/posts",
 		imageInfo: {
 			directory: 'images/',
-			name: 'adonuxt',
+			name: 'lv',
 			type: '.png'
 		},
 		size: {
@@ -53,9 +53,8 @@ page.open(browserInfo.url, function(status) {
 	if (status === "success") {
 
 		window.setTimeout(function() {
-			// page.render(browserInfo.imageInfo.directory + browserInfo.imageInfo.name + browserInfo.imageInfo.type);
 
-			var inputValue = page.evaluate(function() {
+			page.evaluate(function() {
 				document.querySelector("#nzc-header-account").value = 'flycchung';
 				document.querySelector("#nzc-header-password").value = '123qwe';
 				document.querySelector("#nzc-header-login").click();
@@ -66,10 +65,9 @@ page.open(browserInfo.url, function(status) {
 				page.render(browserInfo.imageInfo.directory + browserInfo.imageInfo.name + browserInfo.imageInfo.type);
 				phantom.exit();
 
-			}, 3000);
+			}, 1000);
 
 		}, 3000);
-
 	} else {
 		console.log("Load Page Failed!");
 	}
