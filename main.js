@@ -55,15 +55,10 @@ page.onUrlChanged = function(input) {
 	console.log('onUrlChanged: ' + input);
 };
 
-var finishedCount = 1;
+var captureNumber = 0;
 page.onLoadFinished = function(input) {
-	capture(page, {
-		name: 'finished' + finishedCount,
-		type: '.png',
-		directory: 'images/'
-	});
-	finishedCount++;
 	console.log('onLoadFinished: ' + input);
+	capture(page);
 };
 
 
@@ -82,7 +77,23 @@ page.open(browserInfo.url, function(status) {
 
 			setTimeout(function() {
 				capture(page, browserInfo.imageInfo);
-				phantom.exit();
+
+				page.evaluate(function() {
+					document.querySelector("#nzc-nav-fish").click();
+				});
+
+				setTimeout(function() {
+					console.log("click fished");
+					capture(page);
+
+					setTimeout(function() {
+						console.log('another 3sec');
+						capture(page);
+						phantom.exit();
+					}, 3000);
+
+				}, 3000);
+
 			}, 1000);
 
 		}, 3000);
@@ -93,10 +104,19 @@ page.open(browserInfo.url, function(status) {
 });
 
 function capture(page, imageInfo) {
+	captureNumber++;
+	imageInfo = imageInfo ? imageInfo : {};
+	imageInfo.name = imageInfo.name ? (function() {
+		captureNumber--;
+		return imageInfo.name;
+	})() : 'image_' + captureNumber;
+	imageInfo.type = imageInfo.type ? imageInfo.type : '.png';
+	imageInfo.directory = imageInfo.directory ? imageInfo.directory : 'images/';
 	try {
 		page.render(imageInfo.directory + imageInfo.name + imageInfo.type);
-		console.log('capture success!');
+		console.log("Capture: " + imageInfo.directory + imageInfo.name + imageInfo.type + "\n");
 	} catch (e) {
-		console.log('capture failed!');
+		console.log("Capture Failed!: " + imageInfo.directory + imageInfo.name + imageInfo.type + "\n");
 	}
+
 }
