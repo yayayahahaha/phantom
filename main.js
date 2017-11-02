@@ -52,7 +52,7 @@ page.open(browserInfo.url, function(status) {
 	if (status === "success") {
 		page.render(browserInfo.imageInfo.directory + browserInfo.imageInfo.name + browserInfo.imageInfo.type);
 
-		page.includeJs("http://ajax.googleapis.com/ajax/libs/jquery/1.6.1/jquery.min.js", function() {
+		page.includeJs("https://code.jquery.com/jquery-3.2.1.min.js", function() {
 			page.evaluate(function() {
 				console.log(typeof $);
 				$("button").click();
