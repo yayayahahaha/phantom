@@ -1,7 +1,7 @@
 var page = require('webpage').create(),
 	system = require('system'),
 	time = Date.now(),
-
+	captureNumber = 0,
 	browserInfo = {
 		url: "http://localhost:8080",
 		// url: "https://dartnote.com/posts",
@@ -18,6 +18,10 @@ var page = require('webpage').create(),
 			width: 1024,
 			height: 400
 		}
+	},
+	loginInfo = {
+		userAccount: 'flycchung',
+		userPassword: '123qwe'
 	};
 
 // add server response timeout handler
@@ -51,7 +55,6 @@ page.onUrlChanged = function(input) {
 	console.log('onUrlChanged: ' + input);
 };
 
-var captureNumber = 0;
 page.onLoadFinished = function(input) {
 	console.log('onLoadFinished: ' + input);
 	capture(page);
@@ -61,12 +64,15 @@ page.onResourceRequested = function(req) {
 	if (/ag_fish/.test(req.url)) {
 		console.log("onResourceRequested: " + req.url);
 		capture(page);
-		// phantom.exit();
 	}
 };
 
+page.onLoadFinished = function(input) {
+	console.log('onLoadFinished');
+	console.log(input);
+};
+
 page.onResourceReceived = function(res) {
-	// console.log(res.url);
 	if (/ag_fish/.test(res.url)) {
 		console.log('get fished!');
 		console.log(res.url);
@@ -86,36 +92,12 @@ page.onResourceReceived = function(res) {
 			capture(page, {
 				name: 'click_transfer'
 			});
-			phantom.exit();
+
+			exit();
+
 		}, 0);
 	}
 };
-
-
-// main javascrpit part
-page.open(browserInfo.url, function(status) {
-	// console.log("Status: " + status);
-	if (status === "success") {
-
-		setTimeout(function() {
-			page.evaluate(function() {
-				document.querySelector("#nzc-header-account").value = 'flycchung';
-				document.querySelector("#nzc-header-password").value = '123qwe';
-				document.querySelector("#nzc-header-login").click();
-			});
-
-			setTimeout(function() {
-				capture(page, browserInfo.imageInfo);
-				page.evaluate(function() {
-					document.querySelector("#nzc-nav-fish").click();
-				});
-			}, 1000);
-		}, 0);
-
-	} else {
-		console.log("Load Page Failed!");
-	}
-});
 
 function capture(page, imageInfo) {
 	captureNumber++;
@@ -132,5 +114,46 @@ function capture(page, imageInfo) {
 	} catch (e) {
 		console.log("Capture Failed!: " + imageInfo.directory + imageInfo.name + imageInfo.type + "\n");
 	}
-
 }
+
+function login() {
+	page.evaluate(function(loginInfo) {
+		document.querySelector("#nzc-header-account").value = loginInfo.userAccount;
+		document.querySelector("#nzc-header-password").value = loginInfo.userPassword;
+		document.querySelector("#nzc-header-login").click();
+	}, loginInfo);
+}
+
+function start() {
+	console.log('\n***************');
+	console.log('*Phantom Start*');
+	console.log('***************\n');
+
+	// main javascrpit part
+	page.open(browserInfo.url, function(status) {
+		console.log("Status: " + status);
+		if (status === "success") {
+			login();
+
+			setTimeout(function() {
+				capture(page, browserInfo.imageInfo);
+				page.evaluate(function() {
+					document.querySelector("#nzc-nav-fish").click();
+				});
+			}, 1000);
+
+		} else {
+			console.log("Load Page Failed!");
+		}
+	});
+}
+
+function exit() {
+	console.log('\n**************');
+	console.log('*exit Phantom*');
+	console.log('**************');
+	console.log('total time spend: ' + Math.round(((Date.now() - time) / 100)) / 10 + 'sec');
+	phantom.exit();
+}
+
+start();
