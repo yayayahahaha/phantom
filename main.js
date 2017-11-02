@@ -20,6 +20,13 @@ var page = require('webpage').create(),
 		}
 	};
 
+// add server response timeout handler
+page.settings.resourceTimeout = 60000;
+page.onResourceTimeout = function(request) {
+	add_message("error", "ResourceTimeout (60s)");
+	render_message();
+};
+
 //this listenter could make javascript console.log in web show on terminal!
 page.onConsoleMessage = function(msg) {
 	// console.log(msg);
