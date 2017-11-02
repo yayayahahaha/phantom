@@ -3,7 +3,8 @@ var page = require('webpage').create(),
 	time = Date.now(),
 
 	browserInfo = {
-		url: "http://localhost:3000",
+		// url: "http://localhost:3000",
+		url: "https://dartnote.com/posts",
 		imageInfo: {
 			directory: 'images/',
 			name: 'adonuxt',
@@ -21,7 +22,7 @@ var page = require('webpage').create(),
 
 //this listenter could make javascript console.log in web show on terminal!
 page.onConsoleMessage = function(msg) {
-	console.log(msg);
+	// console.log(msg);
 };
 
 // the size of browser
@@ -43,6 +44,21 @@ page.open(browserInfo.url, function(status) {
 	console.log("Status: " + status);
 	if (status === "success") {
 		page.render(browserInfo.imageInfo.directory + browserInfo.imageInfo.name + browserInfo.imageInfo.type);
+
+		var divs = page.evaluate(function() {
+			var str = [];
+			var div = document.querySelectorAll('.item > a > img');
+			for (var i = 0; i < div.length; i++) {
+				str.push(div[i].src);
+			}
+			return str;
+		});
+
+		console.log(JSON.stringify(divs));
+
+	} else {
+		console.log("Load Page Failed!");
 	}
+
 	phantom.exit();
 });
