@@ -9,14 +9,14 @@ var page = require('webpage').create(),
 	browserInfo = {
 		url: baseUrl,
 		imageInfo: {
-			directory: baseUrl === '8080'
-							? 'images/web/'
-							: baseUrl === '8090'
-								? 'images/admin/'
-								: baseUrl === '8091'
-									? 'images/reseller/'
-									: 'wrong port',
-			name: 'lv',
+		directory: baseUrl === '8080'
+			? 'images/web/'
+			: baseUrl === '8090'
+				? 'images/admin/'
+				: baseUrl === '8091'
+					? 'images/reseller/'
+					: 'wrong port',
+		name: 'lv',
 			type: '.png'
 		},
 		size: {
@@ -29,8 +29,20 @@ var page = require('webpage').create(),
 		}
 	},
 	loginInfo = {
-		userAccount: browserInfo.url === '8080' ? 'flycchung' : browserInfo.url === '8090' ? 'admin' : browserInfo.url === '8091' ? 'bcp88888' : 'wrong port',
-		userPassword: browserInfo.url === '8080' ? '123qwe' : browserInfo.url === '8090' ? 'abc123' : browserInfo.url === '8091' ? 'bcp88888' : 'wrong port',
+		userAccount: browserInfo.url === '8080'
+			? 'flycchung'
+			: browserInfo.url === '8090'
+				? 'admin'
+				: browserInfo.url === '8091'
+					? 'bcp88888'
+					: 'wrong port',
+		userPassword: browserInfo.url === '8080'
+			? '123qwe'
+			: browserInfo.url === '8090'
+				? 'abc123'
+				: browserInfo.url === '8091'
+					? 'bcp88888'
+					: 'wrong port',
 	};
 
 
