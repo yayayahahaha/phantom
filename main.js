@@ -4,9 +4,9 @@ var page = require('webpage').create(),
 	captureNumber = 0,
 	captureSort = 0,
 	browserInfo = {
-		url: "8090",
+		// url: "8090",
 		// url: "8091",
-		// url: "8080",
+		url: "8080",
 		imageInfo: {
 			directory: 'images/',
 			name: 'lv',
@@ -52,7 +52,7 @@ page.onResourceTimeout = function(request) {
 
 //this listenter could make javascript console.log in web show on terminal!
 page.onConsoleMessage = function(msg) {
-	console.log(msg);
+	// console.log(msg);
 };
 
 page.onUrlChanged = function(input) {
@@ -124,13 +124,17 @@ function capture(input) {
 
 function login() {
 
+	if (browserInfo.url === '8080') {
+		page.evaluate(function(loginInfo) {
+			document.querySelector("#nzc-header-account").value = loginInfo.userAccount;
+			document.querySelector("#nzc-header-password").value = loginInfo.userPassword;
+			document.querySelector("#nzc-header-login").click();
+		}, loginInfo);
+		return;
+	}
+
 	// account
 	page.evaluate(function(loginInfo) {
-		/*
-		document.querySelector("#nzc-header-account").value = loginInfo.userAccount;
-		document.querySelector("#nzc-header-password").value = loginInfo.userPassword;
-		document.querySelector("#nzc-header-login").click();
-		*/
 		document.querySelector("input[name=username]").value = loginInfo.userAccount;
 		document.querySelector("input[name=username]").focus();
 	}, loginInfo);
@@ -144,7 +148,6 @@ function login() {
 		document.querySelector("input[name=username]").blur();
 	});
 
-
 	// password
 	page.evaluate(function(loginInfo) {
 		document.querySelector("input[name=password]").value = loginInfo.userPassword;
@@ -154,8 +157,8 @@ function login() {
 	page.evaluate(function() {
 		document.querySelector("input[name=password]").blur();
 		document.querySelector("input[name=password]").focus();
+		page.sendEvent('keypress', page.event.key.Backspace);
 	});
-	page.sendEvent('keypress', page.event.key.Backspace);
 	page.evaluate(function() {
 		document.querySelector("input[name=password]").blur();
 	});
@@ -180,14 +183,11 @@ function start() {
 
 	// main javascrpit part
 	page.open('http://localhost:' + browserInfo.url, function(status) {
-
-
 		console.log("Status: " + status);
 		if (status === "success") {
-			capture();
+			capture('firstLook');
 			login();
-
-			capture();
+			capture('afterInputAccountPassword');
 
 			page.evaluate(function() {
 				document.querySelector("button").click();
