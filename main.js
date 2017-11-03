@@ -145,7 +145,7 @@ function pageOpen(page, info) {
 	page.open(info.url, function(st) {
 		_capture(page, {
 			directory: 'images/' + info.name + '/',
-			name: info.name + '_first'
+			name: info.name + '_' + info.mode +'_first'
 		});
 		finishedSignal();
 	});
