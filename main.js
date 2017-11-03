@@ -5,7 +5,7 @@ var page = require('webpage').create(),
 	captureSort = 0,
 	browserInfo = {
 		// url: "http://localhost:8091",
-		url: "http://localhost:8090",
+		url: "http://localhost:8091",
 		imageInfo: {
 			directory: 'images/',
 			name: 'lv',
@@ -21,9 +21,13 @@ var page = require('webpage').create(),
 		}
 	},
 	loginInfo = {
-		userAccount: 'bcp88888',
-		userPassword: 'bcp88888'
-	};
+		userAccount: 'admin',
+		userPassword: 'abc123'
+	}; //admin
+	loginInfo = {
+		userAccount: 'bcp8888',
+		userPassword: 'bcp8888'
+	}; //reseller
 
 // add server response timeout handler
 page.settings.resourceTimeout = 60000;
@@ -126,21 +130,22 @@ function login() {
 		document.querySelector("input[name=username]").focus();
 
 	}, loginInfo);
-	page.sendEvent('keypress', page.event.key.A);
-	page.sendEvent('keypress', page.event.key.Backspace);
+	page.sendEvent('keypress', page.event.key[8]);
+	// page.sendEvent('keypress', page.event.key.Backspace);
 
 
 	page.evaluate(function(loginInfo) {
 		document.querySelector("input[name=password]").value = loginInfo.userPassword;
 		document.querySelector("input[name=password]").focus();
 	}, loginInfo);
-	page.sendEvent('keypress', page.event.key.A);
-	page.sendEvent('keypress', page.event.key.Backspace);
+	page.sendEvent('keypress', page.event.key[8]);
+	// page.sendEvent('keypress', page.event.key.Backspace);
 
 	page.evaluate(function() {
-		document.querySelector("input[name=otp]").focus();
+		// document.querySelector("input[name=otp]").focus();
+		document.querySelector("input[name=password]").blur();
 	});
-	page.sendEvent('keypress', page.event.key[1]);
+	// page.sendEvent('keypress', page.event.key[1]);
 }
 
 function start() {
@@ -154,6 +159,7 @@ function start() {
 
 		console.log("Status: " + status);
 		if (status === "success") {
+			capture();
 			login();
 
 			capture();
