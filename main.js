@@ -162,6 +162,12 @@ for (var i = 0; i < testList.length; i++) {
 }
 
 function pageOpen(page, info) {
+	console.log('\n***************');
+	console.log('*Phantom Start*');
+	console.log('***************');
+	console.log(info.name);
+	console.log(info.url);
+
 	page.onConsoleMessage = function(msg) {
 		console.log(msg);
 	};
@@ -177,21 +183,24 @@ function pageOpen(page, info) {
 
 				document.querySelector('#login-button').click();
 			}, loginInfo);
+			console.log(info.name + ' login function trigger');
 
 			// after login through mogil version. go to test page,
 			// timeout function is for cookie stuff
 			setTimeout(function() {
-				page.open(info.url + '/lottery/hk', function() {
+				page.open(info.url + '/lottery/hk', function(status) {
+					console.log(info.name + ' lottery page response ' + status);
+
 					setTimeout(function() {
 						page.evaluate(function(info) {
-							try{
-							    console.log(document.querySelector('#hk_rules').id);
-							    document.querySelector('.howToPlay.first > a').click();
-							    document.querySelector(".pop_content.rule_pop").scrollTop = 5331;
-							}catch(e){
-								console.log("error! "+ info.name);
+							try {
+								document.querySelector('.howToPlay.first > a').click();
+								document.querySelector(".pop_content.rule_pop").scrollTop = 5331;
+							} catch (e) {
+								console.log("error! " + info.name);
 							}
 						}, info);
+						console.log(info.name + ' click rule btn and scroll.');
 
 						_capture(page, {
 							name: info.name
@@ -200,7 +209,7 @@ function pageOpen(page, info) {
 						finishedSignal();
 					}, 5000);
 				});
-			}, 5000);
+			}, 3000);
 		});
 
 	});
