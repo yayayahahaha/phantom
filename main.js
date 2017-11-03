@@ -4,8 +4,8 @@ var page = require('webpage').create(),
 	captureNumber = 0,
 	captureSort = 0,
 	browserInfo = {
-		url: "http://localhost:8080",
-		// url: "https://dartnote.com/posts",
+		// url: "http://localhost:8091",
+		url: "http://localhost:8090",
 		imageInfo: {
 			directory: 'images/',
 			name: 'lv',
@@ -13,16 +13,16 @@ var page = require('webpage').create(),
 		},
 		size: {
 			width: 1024,
-			height: 400
+			height: 500
 		},
 		clipSize: {
 			width: 1024,
-			height: 400
+			height: 500
 		}
 	},
 	loginInfo = {
-		userAccount: 'flycchung',
-		userPassword: '123qwe'
+		userAccount: 'bcp88888',
+		userPassword: 'bcp88888'
 	};
 
 // add server response timeout handler
@@ -53,24 +53,18 @@ page.onConsoleMessage = function(msg) {
 };
 
 page.onUrlChanged = function(input) {
-	console.log('onUrlChanged: ' + input);
+	// console.log('onUrlChanged: ' + input);
 };
 
 page.onLoadFinished = function(input) {
 	console.log('onLoadFinished: ' + input);
-	capture();
+	page.evaluate(function() {
+		console.log(window.location.href + '\n');
+	});
 };
 
 page.onResourceRequested = function(req) {
-	if (/ag_fish/.test(req.url)) {
-		console.log("onResourceRequested: " + req.url);
-		capture();
-	}
-};
 
-page.onLoadFinished = function(input) {
-	console.log('onLoadFinished');
-	console.log(input);
 };
 
 page.onResourceReceived = function(res) {
@@ -119,12 +113,34 @@ function capture(imageInfo) {
 	}
 }
 
+
 function login() {
+
 	page.evaluate(function(loginInfo) {
+		/*
 		document.querySelector("#nzc-header-account").value = loginInfo.userAccount;
 		document.querySelector("#nzc-header-password").value = loginInfo.userPassword;
 		document.querySelector("#nzc-header-login").click();
+		*/
+		document.querySelector("input[name=username]").value = loginInfo.userAccount;
+		document.querySelector("input[name=username]").focus();
+
 	}, loginInfo);
+	page.sendEvent('keypress', page.event.key.A);
+	page.sendEvent('keypress', page.event.key.Backspace);
+
+
+	page.evaluate(function(loginInfo) {
+		document.querySelector("input[name=password]").value = loginInfo.userPassword;
+		document.querySelector("input[name=password]").focus();
+	}, loginInfo);
+	page.sendEvent('keypress', page.event.key.A);
+	page.sendEvent('keypress', page.event.key.Backspace);
+
+	page.evaluate(function() {
+		document.querySelector("input[name=otp]").focus();
+	});
+	page.sendEvent('keypress', page.event.key[1]);
 }
 
 function start() {
@@ -134,11 +150,22 @@ function start() {
 
 	// main javascrpit part
 	page.open(browserInfo.url, function(status) {
+
+
 		console.log("Status: " + status);
 		if (status === "success") {
+			login();
+
 			capture();
 
-			login();
+			page.evaluate(function() {
+				document.querySelector("button").click();
+			});
+
+			setTimeout(function() {
+				capture();
+				exit();
+			}, 1000);
 
 			setTimeout(function() {
 				page.evaluate(function() {
