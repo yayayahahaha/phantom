@@ -3,12 +3,19 @@ var page = require('webpage').create(),
 	time = Date.now(),
 	captureNumber = 0,
 	captureSort = 0,
+	// baseUrl = "8080",
+	// baseUrl = "8090",
+	baseUrl = "8091",
 	browserInfo = {
-		// url: "8090",
-		// url: "8091",
-		url: "8080",
+		url: baseUrl,
 		imageInfo: {
-			directory: 'images/',
+			directory: baseUrl === '8080'
+							? 'images/web/'
+							: baseUrl === '8090'
+								? 'images/admin/'
+								: baseUrl === '8091'
+									? 'images/reseller/'
+									: 'wrong port',
 			name: 'lv',
 			type: '.png'
 		},
@@ -110,7 +117,7 @@ function capture(input) {
 		return imageInfo.name;
 	})() : 'image_' + captureNumber;
 	imageInfo.type = imageInfo.type ? imageInfo.type : '.png';
-	imageInfo.directory = imageInfo.directory ? imageInfo.directory : 'images/';
+	imageInfo.directory = imageInfo.directory ? imageInfo.directory : browserInfo.imageInfo.directory;
 
 	try {
 		var imagePath = imageInfo.directory + captureSort + '_' + imageInfo.name + imageInfo.type;
@@ -157,8 +164,8 @@ function login() {
 	page.evaluate(function() {
 		document.querySelector("input[name=password]").blur();
 		document.querySelector("input[name=password]").focus();
-		page.sendEvent('keypress', page.event.key.Backspace);
 	});
+	page.sendEvent('keypress', page.event.key.Backspace);
 	page.evaluate(function() {
 		document.querySelector("input[name=password]").blur();
 	});
