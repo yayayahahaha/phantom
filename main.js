@@ -124,6 +124,7 @@ function login(page, o) {
 	}
 }
 
+
 var testList = [{
 	name: 'lv',
 	mode: 'debug',
@@ -153,15 +154,45 @@ var testList = [{
 	mode: 'debug',
 	url: 'http://13.228.189.233:8005/'
 }];
-
+/*
+var testList = [{
+	name: 'lv',
+	mode: 'uat',
+	url: 'http://lv-web-uat.paradise-soft.com.tw/'
+}, {
+	name: 'hy',
+	mode: 'uat',
+	url: 'http://hy-web-uat.paradise-soft.com.tw/'
+}, {
+	name: 'ls',
+	mode: 'uat',
+	url: 'http://ls-web-uat.paradise-soft.com.tw/'
+}, {
+	name: 'c7',
+	mode: 'uat',
+	url: 'http://c7-web-uat.paradise-soft.com.tw/'
+}, {
+	name: 'c8',
+	mode: 'uat',
+	url: 'http://c8-web-uat.paradise-soft.com.tw/'
+}, {
+	name: 'bh',
+	mode: 'uat',
+	url: 'http://bh-web-uat.paradise-soft.com.tw/'
+}, {
+	name: 'tz',
+	mode: 'uat',
+	url: 'http://tz-web-uat.paradise-soft.com.tw/'
+}];
+*/
 var pageObjectList = [];
 for (var i = 0; i < testList.length; i++) {
 	pageObjectList.push(require('webpage').create());
 	var p = pageObjectList[i];
-	pageOpen(pageObjectList[i], testList[i]);
+	pageOpen(pageObjectList[i], testList[i], i);
 }
 
-function pageOpen(page, info) {
+function pageOpen(page, info, sec) {
 	console.log('\n***************');
 	console.log('*Phantom Start*');
 	console.log('***************');
@@ -172,47 +203,49 @@ function pageOpen(page, info) {
 		console.log(msg);
 	};
 
-	page.open(info.url, function(st) {
+	setTimeout(function() {
+		page.open(info.url, function(st) {
 
-		page.open(info.url + 'm/login', function() {
+			page.open(info.url + 'm/login', function() {
 
-			// login
-			page.evaluate(function(loginInfo) {
-				document.querySelector("#login-username").value = loginInfo.userAccount;
-				document.querySelector("#login-password").value = loginInfo.userPassword;
+				// login
+				page.evaluate(function(loginInfo) {
+					document.querySelector("#login-username").value = loginInfo.userAccount;
+					document.querySelector("#login-password").value = loginInfo.userPassword;
 
-				document.querySelector('#login-button').click();
-			}, loginInfo);
-			console.log(info.name + ' login function trigger');
+					document.querySelector('#login-button').click();
+				}, loginInfo);
+				console.log(info.name + ' login function trigger ' + info.mode);
 
-			// after login through mogil version. go to test page,
-			// timeout function is for cookie stuff
-			setTimeout(function() {
-				page.open(info.url + '/lottery/hk', function(status) {
-					console.log(info.name + ' lottery page response ' + status);
+				// after login through mogil version. go to test page,
+				// timeout function is for cookie stuff
+				setTimeout(function() {
+					page.open(info.url + '/lottery/hk', function(status) {
+						console.log(info.name + ' lottery page response ' + info.mode + ' ' + status);
 
-					setTimeout(function() {
-						page.evaluate(function(info) {
-							try {
-								document.querySelector('.howToPlay.first > a').click();
-								document.querySelector(".pop_content.rule_pop").scrollTop = 5331;
-							} catch (e) {
-								console.log("error! " + info.name);
-							}
-						}, info);
-						console.log(info.name + ' click rule btn and scroll.');
+						setTimeout(function() {
+							page.evaluate(function(info) {
+								try {
+									document.querySelector('.howToPlay.first > a').click();
+									document.querySelector(".pop_content.rule_pop").scrollTop = 5331;
+								} catch (e) {
+									console.log("error! " + info.name);
+								}
+							}, info);
+							console.log(info.name + ' click rule btn and scroll. ' + info.mode);
 
-						_capture(page, {
-							name: info.name
-						});
+							_capture(page, {
+								name: info.name + "_" + info.mode
+							});
 
-						finishedSignal();
-					}, 5000);
-				});
-			}, 3000);
+							finishedSignal();
+						}, 10000);
+					});
+				}, 10000);
+			});
+
 		});
-
-	});
+	}, sec * 1000);
 }
 
 var finishedCount = 0;
