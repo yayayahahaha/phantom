@@ -1,3 +1,33 @@
+function _capture(pageObj, input) {
+	if (arguments.length !== 2) {
+		console.log('_capture failed!');
+		exit();
+		return;
+	}
+
+	captureNumber++;
+	captureSort++;
+
+	imageInfo = typeof input === 'object' ? input : {
+		name: input
+	};
+
+	imageInfo.name = imageInfo.name ? (function() {
+		captureNumber--;
+		return imageInfo.name;
+	})() : 'image_' + captureNumber;
+	imageInfo.type = imageInfo.type ? imageInfo.type : '.png';
+	imageInfo.directory = imageInfo.directory ? imageInfo.directory : browserInfo.imageInfo.directory;
+
+	try {
+		var imagePath = imageInfo.directory + Date.now() + '_' + imageInfo.name + imageInfo.type;
+		pageObj.render(imagePath);
+		console.log("Capture: " + imagePath + "\n");
+	} catch (e) {
+		console.log("Capture Failed!: " + imageInfo.directory + imageInfo.name + imageInfo.type + "\n");
+	}
+}
+
 function capture(input) {
 	captureNumber++;
 	captureSort++;
@@ -75,6 +105,65 @@ function login() {
 	}
 }
 
+var testList = [{
+	name: 'lv',
+	mode: 'debug',
+	url: 'http://54.65.82.189:8005/'
+}, {
+	name: 'hy',
+	mode: 'debug',
+	url: 'http://52.78.16.76:8005/'
+}, {
+	name: 'ls',
+	mode: 'debug',
+	url: 'http://13.229.24.190:8005/'
+}, {
+	name: 'c7',
+	mode: 'debug',
+	url: 'http://13.229.32.176:8005/'
+}, {
+	name: 'c8',
+	mode: 'debug',
+	url: 'http://13.229.18.197:8005/'
+}, {
+	name: 'bh',
+	mode: 'debug',
+	url: 'http://13.229.26.202:8005/'
+}, {
+	name: 'tz',
+	mode: 'debug',
+	url: 'http://13.228.189.233:8005/'
+}];
+
+var pageObjectList = [];
+for (var i = 0; i < testList.length; i++) {
+	pageObjectList.push(require('webpage').create());
+	var p = pageObjectList[i];
+	pageOpen(pageObjectList[i], testList[i]);
+}
+function pageOpen(page, info) {
+	page.open(info.url, function(st) {
+		_capture(page, {
+			directory: 'images/' + info.name + '/',
+			name: info.name + '_first'
+		});
+		finishedSignal();
+	});
+}
+
+var finishedCount = 0;
+function finishedSignal() {
+	finishedCount++;
+	if (finishedCount == testList.length) {
+		console.log('phantom will exit after 1 sec!');
+		setTimeout(function() {
+			exit();
+		}, 1000);
+	}
+}
+
+
+// single page test
 var page = require('webpage').create(),
 	system = require('system'),
 	time = Date.now(),
@@ -103,8 +192,6 @@ var page = require('webpage').create(),
 		userAccount: browserInfo.url === '8080' ? 'flycchung' : browserInfo.url === '8090' ? 'admin' : browserInfo.url === '8091' ? 'bcp88888' : 'wrong port',
 		userPassword: browserInfo.url === '8080' ? '123qwe' : browserInfo.url === '8090' ? 'abc123' : browserInfo.url === '8091' ? 'bcp88888' : 'wrong port',
 	};
-
-
 
 // add server response timeout handler
 page.settings.resourceTimeout = 60000;
@@ -385,4 +472,4 @@ function exit() {
 }
 
 // start();
-createWebAccount();
+// createWebAccount();
