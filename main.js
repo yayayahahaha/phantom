@@ -1,26 +1,44 @@
+var page = require('webpage').create(),
+	system = require('system'),
+	time = Date.now(),
+	captureNumber = 0,
+	captureSort = 0,
+	baseUrl = "8080",
+	// baseUrl = "8090",
+	// baseUrl = "8091",
+	browserInfo = {
+		url: baseUrl,
+		imageInfo: {
+			directory: baseUrl === '8080' ? 'images/web/' : baseUrl === '8090' ? 'images/admin/' : baseUrl === '8091' ? 'images/reseller/' : 'wrong port',
+			name: 'lv',
+			type: '.png'
+		},
+		size: {
+			width: 1024,
+			height: 500
+		},
+		clipSize: {
+			width: 1024,
+			height: 500
+		}
+	},
+	loginInfo = {
+		userAccount: browserInfo.url === '8080' ? 'flycchung' : browserInfo.url === '8090' ? 'admin' : browserInfo.url === '8091' ? 'bcp88888' : 'wrong port',
+		userPassword: browserInfo.url === '8080' ? '123qwe' : browserInfo.url === '8090' ? 'abc123' : browserInfo.url === '8091' ? 'bcp88888' : 'wrong port',
+	};
+
 function _capture(pageObj, input) {
-	if (arguments.length !== 2) {
-		console.log('_capture failed!');
-		exit();
-		return;
-	}
-
-	captureNumber++;
-	captureSort++;
-
 	imageInfo = typeof input === 'object' ? input : {
 		name: input
 	};
 
-	imageInfo.name = imageInfo.name ? (function() {
-		captureNumber--;
-		return imageInfo.name;
-	})() : 'image_' + captureNumber;
+	imageInfo.name = imageInfo.name ? imageInfo.name : 'image';
+	imageInfo.name += ('_' + Date.now());
 	imageInfo.type = imageInfo.type ? imageInfo.type : '.png';
-	imageInfo.directory = imageInfo.directory ? imageInfo.directory : browserInfo.imageInfo.directory;
+	imageInfo.directory = imageInfo.directory ? imageInfo.directory : 'images/';
 
 	try {
-		var imagePath = imageInfo.directory + Date.now() + '_' + imageInfo.name + imageInfo.type;
+		var imagePath = imageInfo.directory + imageInfo.name + imageInfo.type;
 		pageObj.render(imagePath);
 		console.log("Capture: " + imagePath + "\n");
 	} catch (e) {
@@ -52,17 +70,18 @@ function capture(input) {
 	}
 }
 
-function login() {
-	if (browserInfo.url === '8080') {
-		// account and password
-		page.evaluate(function(loginInfo) {
-			document.querySelector("#nzc-header-account").value = loginInfo.userAccount;
-			document.querySelector("#nzc-header-password").value = loginInfo.userPassword;
-			document.querySelector("#nzc-header-login").click();
-		}, loginInfo);
-		return;
-	}
+function login(page, o) {
+	// account and password
+	page.evaluate(function(loginInfo) {
+		document.querySelector("#login-username").value = loginInfo.userAccount;
+		document.querySelector("#login-password").value = loginInfo.userPassword;
 
+		setTimeout(function() {
+			document.querySelector('#login-button').click();
+		}, 500);
+	}, loginInfo);
+
+	return;
 	// account
 	page.evaluate(function(loginInfo) {
 		document.querySelector("input[name=username]").value = loginInfo.userAccount;
@@ -141,17 +160,54 @@ for (var i = 0; i < testList.length; i++) {
 	var p = pageObjectList[i];
 	pageOpen(pageObjectList[i], testList[i]);
 }
+
 function pageOpen(page, info) {
+	page.onConsoleMessage = function(msg) {
+		console.log(msg);
+	};
+
 	page.open(info.url, function(st) {
-		_capture(page, {
-			directory: 'images/' + info.name + '/',
-			name: info.name + '_' + info.mode +'_first'
+
+		page.open(info.url + 'm/login', function() {
+
+			// login
+			page.evaluate(function(loginInfo) {
+				document.querySelector("#login-username").value = loginInfo.userAccount;
+				document.querySelector("#login-password").value = loginInfo.userPassword;
+
+				document.querySelector('#login-button').click();
+			}, loginInfo);
+
+			// after login through mogil version. go to test page,
+			// timeout function is for cookie stuff
+			setTimeout(function() {
+				page.open(info.url + '/lottery/hk', function() {
+					setTimeout(function() {
+						page.evaluate(function(info) {
+							try{
+							    console.log(document.querySelector('#hk_rules').id);
+							    document.querySelector('.howToPlay.first > a').click();
+							    document.querySelector(".pop_content.rule_pop").scrollTop = 5331;
+							}catch(e){
+								console.log("error! "+ info.name);
+							}
+						}, info);
+
+						_capture(page, {
+							name: info.name
+						});
+
+						finishedSignal();
+					}, 5000);
+				});
+			}, 5000);
 		});
-		finishedSignal();
+
 	});
 }
 
 var finishedCount = 0;
+
 function finishedSignal() {
 	finishedCount++;
 	if (finishedCount == testList.length) {
@@ -162,36 +218,6 @@ function finishedSignal() {
 	}
 }
 
-
-// single page test
-var page = require('webpage').create(),
-	system = require('system'),
-	time = Date.now(),
-	captureNumber = 0,
-	captureSort = 0,
-	baseUrl = "8080",
-	// baseUrl = "8090",
-	// baseUrl = "8091",
-	browserInfo = {
-		url: baseUrl,
-		imageInfo: {
-			directory: baseUrl === '8080' ? 'images/web/' : baseUrl === '8090' ? 'images/admin/' : baseUrl === '8091' ? 'images/reseller/' : 'wrong port',
-			name: 'lv',
-			type: '.png'
-		},
-		size: {
-			width: 1024,
-			height: 500
-		},
-		clipSize: {
-			width: 1024,
-			height: 500
-		}
-	},
-	loginInfo = {
-		userAccount: browserInfo.url === '8080' ? 'flycchung' : browserInfo.url === '8090' ? 'admin' : browserInfo.url === '8091' ? 'bcp88888' : 'wrong port',
-		userPassword: browserInfo.url === '8080' ? '123qwe' : browserInfo.url === '8090' ? 'abc123' : browserInfo.url === '8091' ? 'bcp88888' : 'wrong port',
-	};
 
 // add server response timeout handler
 page.settings.resourceTimeout = 60000;
