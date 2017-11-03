@@ -4,8 +4,8 @@ var page = require('webpage').create(),
 	captureNumber = 0,
 	captureSort = 0,
 	browserInfo = {
+		url: "http://localhost:8090",
 		// url: "http://localhost:8091",
-		url: "http://localhost:8091",
 		imageInfo: {
 			directory: 'images/',
 			name: 'lv',
@@ -24,10 +24,10 @@ var page = require('webpage').create(),
 		userAccount: 'admin',
 		userPassword: 'abc123'
 	}; //admin
-	loginInfo = {
-		userAccount: 'bcp8888',
-		userPassword: 'bcp8888'
-	}; //reseller
+/*	loginInfo = {
+		userAccount: 'bcp88888',
+		userPassword: 'bcp88888'
+	}; //reseller*/
 
 // add server response timeout handler
 page.settings.resourceTimeout = 60000;
@@ -120,6 +120,7 @@ function capture(imageInfo) {
 
 function login() {
 
+	// account
 	page.evaluate(function(loginInfo) {
 		/*
 		document.querySelector("#nzc-header-account").value = loginInfo.userAccount;
@@ -128,24 +129,41 @@ function login() {
 		*/
 		document.querySelector("input[name=username]").value = loginInfo.userAccount;
 		document.querySelector("input[name=username]").focus();
-
 	}, loginInfo);
-	page.sendEvent('keypress', page.event.key[8]);
-	// page.sendEvent('keypress', page.event.key.Backspace);
+	page.sendEvent('keypress', page.event.key.A);
+	page.evaluate(function() {
+		document.querySelector("input[name=username]").blur();
+		document.querySelector("input[name=username]").focus();
+	});
+	page.sendEvent('keypress', page.event.key.Backspace);
+	page.evaluate(function() {
+		document.querySelector("input[name=username]").blur();
+	});
 
 
+	// password
 	page.evaluate(function(loginInfo) {
 		document.querySelector("input[name=password]").value = loginInfo.userPassword;
 		document.querySelector("input[name=password]").focus();
 	}, loginInfo);
-	page.sendEvent('keypress', page.event.key[8]);
-	// page.sendEvent('keypress', page.event.key.Backspace);
-
+	page.sendEvent('keypress', page.event.key.A);
 	page.evaluate(function() {
-		// document.querySelector("input[name=otp]").focus();
+		document.querySelector("input[name=password]").blur();
+		document.querySelector("input[name=password]").focus();
+	});
+	page.sendEvent('keypress', page.event.key.Backspace);
+	page.evaluate(function() {
 		document.querySelector("input[name=password]").blur();
 	});
-	// page.sendEvent('keypress', page.event.key[1]);
+
+	// opt
+	page.evaluate(function() {
+		document.querySelector('input[data-bind="textInput: otp"]').focus();
+	});
+	page.sendEvent('keypress', page.event.key[1]);
+	page.evaluate(function() {
+		document.querySelector('input[data-bind="textInput: otp"]').blur();
+	});
 }
 
 function start() {
