@@ -4,8 +4,9 @@ var page = require('webpage').create(),
 	captureNumber = 0,
 	captureSort = 0,
 	browserInfo = {
-		url: "http://localhost:8090",
-		// url: "http://localhost:8091",
+		url: "8090",
+		// url: "8091",
+		// url: "8080",
 		imageInfo: {
 			directory: 'images/',
 			name: 'lv',
@@ -21,13 +22,11 @@ var page = require('webpage').create(),
 		}
 	},
 	loginInfo = {
-		userAccount: 'admin',
-		userPassword: 'abc123'
-	}; //admin
-/*	loginInfo = {
-		userAccount: 'bcp88888',
-		userPassword: 'bcp88888'
-	}; //reseller*/
+		userAccount: browserInfo.url === '8080' ? 'flycchung' : browserInfo.url === '8090' ? 'admin' : browserInfo.url === '8091' ? 'bcp88888' : 'wrong port',
+		userPassword: browserInfo.url === '8080' ? '123qwe' : browserInfo.url === '8090' ? 'abc123' : browserInfo.url === '8091' ? 'bcp88888' : 'wrong port',
+	};
+
+
 
 // add server response timeout handler
 page.settings.resourceTimeout = 60000;
@@ -60,8 +59,8 @@ page.onUrlChanged = function(input) {
 	// console.log('onUrlChanged: ' + input);
 };
 
-page.onLoadFinished = function(input) {
-	console.log('onLoadFinished: ' + input);
+page.onLoadFinished = function(status) {
+	console.log('onLoadFinished: ' + status);
 	page.evaluate(function() {
 		console.log(window.location.href + '\n');
 	});
@@ -98,16 +97,21 @@ page.onResourceReceived = function(res) {
 	}
 };
 
-function capture(imageInfo) {
+function capture(input) {
 	captureNumber++;
 	captureSort++;
-	imageInfo = imageInfo ? imageInfo : {};
+
+	imageInfo = typeof input === 'object' ? input : {
+		name: input
+	};
+
 	imageInfo.name = imageInfo.name ? (function() {
 		captureNumber--;
 		return imageInfo.name;
 	})() : 'image_' + captureNumber;
 	imageInfo.type = imageInfo.type ? imageInfo.type : '.png';
 	imageInfo.directory = imageInfo.directory ? imageInfo.directory : 'images/';
+
 	try {
 		var imagePath = imageInfo.directory + captureSort + '_' + imageInfo.name + imageInfo.type;
 		page.render(imagePath);
@@ -156,23 +160,26 @@ function login() {
 		document.querySelector("input[name=password]").blur();
 	});
 
-	// opt
-	page.evaluate(function() {
-		document.querySelector('input[data-bind="textInput: otp"]').focus();
-	});
-	page.sendEvent('keypress', page.event.key[1]);
-	page.evaluate(function() {
-		document.querySelector('input[data-bind="textInput: otp"]').blur();
-	});
+	if (loginInfo.userAccount === 'admin') {
+		// opt
+		page.evaluate(function() {
+			document.querySelector('input[data-bind="textInput: otp"]').focus();
+		});
+		page.sendEvent('keypress', page.event.key[1]);
+		page.evaluate(function() {
+			document.querySelector('input[data-bind="textInput: otp"]').blur();
+		});
+	}
 }
 
 function start() {
 	console.log('\n***************');
 	console.log('*Phantom Start*');
-	console.log('***************\n');
+	console.log('***************');
+	console.log('http://localhost:' + browserInfo.url);
 
 	// main javascrpit part
-	page.open(browserInfo.url, function(status) {
+	page.open('http://localhost:' + browserInfo.url, function(status) {
 
 
 		console.log("Status: " + status);
@@ -187,18 +194,13 @@ function start() {
 			});
 
 			setTimeout(function() {
-				capture();
+				capture('afterLogin');
 				exit();
-			}, 1000);
-
-			setTimeout(function() {
-				page.evaluate(function() {
-					document.querySelector("#nzc-nav-fish").click();
-				});
 			}, 1000);
 
 		} else {
 			console.log("Load Page Failed!");
+			exit();
 		}
 	});
 }
