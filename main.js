@@ -200,21 +200,24 @@ var testList2 = [{
 }];
 
 
-var pageObjectList = [];
+var pageObjectList = [],
+	pageByPage = false;
+
 testList = testList.concat(testList2);
+
 for (var i = 0; i < testList.length; i++) {
 	pageObjectList.push(require('webpage').create());
 	var p = pageObjectList[i];
-	// pageOpen(pageObjectList[i], testList[i], i);
+	pageOpen(pageObjectList[i], testList[i], i);
 }
-pageOpen(pageObjectList[0], testList[0], i);
+// pageOpen(pageObjectList[0], testList[0], i);
 
 function pageOpen(page, info, sec) {
 	console.log('\n***************');
 	console.log('*Phantom Start*');
 	console.log('***************');
 	console.log(info.name);
-	// console.log(info.url);
+	console.log(info.url);
 
 	page.onConsoleMessage = function(msg) {
 		console.log(msg);
@@ -244,9 +247,15 @@ function pageOpen(page, info, sec) {
 		if (/\.xy-web,/.test(cookiesString) && cookieStatus) {
 			cookieStatus = false;
 			/* which means user has login */
-
 			page.open(info.url + '/lottery/hk', function(status) {
 				console.log(info.name + " " + status);
+				if (status === 'fail') {
+					fail++;
+					finishedSignal();
+					page.close();
+					return;
+				}
+				success++;
 
 				page.evaluate(function(info) {
 					try {
@@ -257,18 +266,23 @@ function pageOpen(page, info, sec) {
 					}
 				}, info);
 
-				_capture(page, {
-					name: info.name + "_" + info.mode
-				});
+				if (pageByPage) {
+					_capture(page, {
+						name: info.name + "_" + info.mode
+					});
 
-				finishedSignal();
-				page.close();
+					finishedSignal();
+					page.close();
+				} else {
+					setTimeout(function() {
+						_capture(page, {
+							name: info.name + "_" + info.mode
+						});
 
-				if (status == 'success') {
-					success++;
-					return;
+						finishedSignal();
+						page.close();
+					}, 0);
 				}
-				fail++;
 			});
 		}
 
@@ -276,6 +290,12 @@ function pageOpen(page, info, sec) {
 
 	page.clearCookies();
 	page.open(info.url + 'm/login', function(status) {
+		if (status === 'fail') {
+			fail++;
+			finishedSignal();
+			page.close();
+			return;
+		}
 		console.log('status: ' + status);
 		_login(page, info);
 	});
@@ -292,7 +312,7 @@ function finishedSignal() {
 			console.log("fail: " + fail);
 			exit();
 		}, 1000);
-	} else {
+	} else if (pageByPage) {
 		pageOpen(pageObjectList[finishedCount], testList[finishedCount], i);
 	}
 }
