@@ -155,10 +155,8 @@ function pageOpen(page, info, sec) {
 		console.log('page.url: ' + page.url);
 
 		var cookiesString = '';
-		if (page.cookies.length !== 0) {
-			for (var i = 0; i < page.cookies.length; i++) {
-				cookiesString += (page.cookies[i].name) + ',';
-			}
+		for (var i = 0; i < page.cookies.length; i++) {
+			cookiesString += (page.cookies[i].name) + ',';
 		}
 
 		if (/-web,/.test(cookiesString) && cookieStatus) {
