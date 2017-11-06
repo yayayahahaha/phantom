@@ -70,6 +70,18 @@ function capture(input) {
 	}
 }
 
+function _login(page, info) {
+	// login
+	page.evaluate(function(loginInfo) {
+		document.querySelector("#login-username").value = loginInfo.userAccount;
+		document.querySelector("#login-password").value = loginInfo.userPassword;
+	}, loginInfo);
+	page.evaluate(function() {
+		document.querySelector('#login-button').click();
+	});
+	// console.log(info.name + ' login function trigger ' + info.mode);
+}
+
 function login(page, o) {
 	// account and password
 	page.evaluate(function(loginInfo) {
@@ -124,6 +136,8 @@ function login(page, o) {
 	}
 }
 
+var success = 0,
+	fail = 0;
 
 var testList = [{
 	name: 'lv',
@@ -154,8 +168,8 @@ var testList = [{
 	mode: 'debug',
 	url: 'http://13.228.189.233:8005/'
 }];
-/*
-var testList = [{
+
+var testList2 = [{
 	name: 'lv',
 	mode: 'uat',
 	url: 'http://lv-web-uat.paradise-soft.com.tw/'
@@ -184,68 +198,87 @@ var testList = [{
 	mode: 'uat',
 	url: 'http://tz-web-uat.paradise-soft.com.tw/'
 }];
-*/
+
+
 var pageObjectList = [];
+testList = testList.concat(testList2);
 for (var i = 0; i < testList.length; i++) {
 	pageObjectList.push(require('webpage').create());
 	var p = pageObjectList[i];
-	pageOpen(pageObjectList[i], testList[i], i);
+	// pageOpen(pageObjectList[i], testList[i], i);
 }
+pageOpen(pageObjectList[0], testList[0], i);
 
 function pageOpen(page, info, sec) {
 	console.log('\n***************');
 	console.log('*Phantom Start*');
 	console.log('***************');
 	console.log(info.name);
-	console.log(info.url);
+	// console.log(info.url);
 
 	page.onConsoleMessage = function(msg) {
 		console.log(msg);
 	};
 
-	setTimeout(function() {
-		page.open(info.url, function(st) {
+	page.onResourceError = function(res) {
 
-			page.open(info.url + 'm/login', function() {
+		return;
+		console.log('Unable to load resource (#' + res.id + 'URL:' + res.url + ')');
+		console.log('Error code: ' + res.errorCode + '. Description: ' + res.errorString);
+		page.onResourceError = function() {};
 
-				// login
-				page.evaluate(function(loginInfo) {
-					document.querySelector("#login-username").value = loginInfo.userAccount;
-					document.querySelector("#login-password").value = loginInfo.userPassword;
+	};
 
-					document.querySelector('#login-button').click();
-				}, loginInfo);
-				console.log(info.name + ' login function trigger ' + info.mode);
+	var cookieStatus = true;
+	page.onLoadFinished = function(input, ar2) {
+		console.log('onLoadFinished: ' + input);
+		console.log('page.url: ' + page.url);
 
-				// after login through mogil version. go to test page,
-				// timeout function is for cookie stuff
-				setTimeout(function() {
-					page.open(info.url + '/lottery/hk', function(status) {
-						console.log(info.name + ' lottery page response ' + info.mode + ' ' + status);
+		var cookiesString = '';
+		if (page.cookies.length !== 0) {
+			for (var i = 0; i < page.cookies.length; i++) {
+				cookiesString += (page.cookies[i].name) + ',';
+			}
+		}
 
-						setTimeout(function() {
-							page.evaluate(function(info) {
-								try {
-									document.querySelector('.howToPlay.first > a').click();
-									document.querySelector(".pop_content.rule_pop").scrollTop = 5331;
-								} catch (e) {
-									console.log("error! " + info.name);
-								}
-							}, info);
-							console.log(info.name + ' click rule btn and scroll. ' + info.mode);
+		if (/\.xy-web,/.test(cookiesString) && cookieStatus) {
+			cookieStatus = false;
+			/* which means user has login */
 
-							_capture(page, {
-								name: info.name + "_" + info.mode
-							});
+			page.open(info.url + '/lottery/hk', function(status) {
+				console.log(info.name + " " + status);
 
-							finishedSignal();
-						}, 10000);
-					});
-				}, 10000);
+				page.evaluate(function(info) {
+					try {
+						document.querySelector('.howToPlay.first > a').click();
+						document.querySelector(".pop_content.rule_pop").scrollTop = 5331;
+					} catch (e) {
+						console.log("error! " + info.name);
+					}
+				}, info);
+
+				_capture(page, {
+					name: info.name + "_" + info.mode
+				});
+
+				finishedSignal();
+				page.close();
+
+				if (status == 'success') {
+					success++;
+					return;
+				}
+				fail++;
 			});
+		}
 
-		});
-	}, sec * 1000);
+	};
+
+	page.clearCookies();
+	page.open(info.url + 'm/login', function(status) {
+		console.log('status: ' + status);
+		_login(page, info);
+	});
 }
 
 var finishedCount = 0;
@@ -255,11 +288,14 @@ function finishedSignal() {
 	if (finishedCount == testList.length) {
 		console.log('phantom will exit after 1 sec!');
 		setTimeout(function() {
+			console.log("success: " + success);
+			console.log("fail: " + fail);
 			exit();
 		}, 1000);
+	} else {
+		pageOpen(pageObjectList[finishedCount], testList[finishedCount], i);
 	}
 }
-
 
 // add server response timeout handler
 page.settings.resourceTimeout = 60000;
@@ -282,54 +318,6 @@ page.clipRect = {
 };
 */
 
-page.onResourceTimeout = function(request) {
-	add_message("error", "ResourceTimeout (60s)");
-	render_message();
-};
-
-//this listenter could make javascript console.log in web show on terminal!
-page.onConsoleMessage = function(msg) {
-	// console.log(msg);
-};
-
-page.onUrlChanged = function(input) {};
-
-page.onLoadFinished = function(status) {
-	console.log('onLoadFinished: ' + status);
-	page.evaluate(function() {
-		console.log(window.location.href + '\n');
-	});
-};
-
-page.onResourceRequested = function(req) {};
-
-page.onResourceReceived = function(res) {
-	if (/ag_fish/.test(res.url)) {
-		console.log('get fished!');
-		console.log(res.url);
-
-		setTimeout(function() {
-			capture({
-				name: 'fish'
-			});
-			page.evaluate(function() {
-				document.querySelector(".s-pop-container .enter").click();
-			});
-		}, 0);
-	}
-
-	if (/apis\/my\/wallet\/transfer/.test(res.url)) {
-		setTimeout(function() {
-			capture({
-				name: 'click_transfer'
-			});
-
-			exit();
-
-		}, 0);
-	}
-};
-
 var fakeUserList = [{
 	accountNPassword: 'fake1fake1',
 	withdrawal: 111111,
@@ -339,167 +327,6 @@ var fakeUserList = [{
 	phone: '09123456789',
 	aid: 'fake1',
 }];
-
-function createWebAccount(userArray) {
-	console.log('\n***************');
-	console.log('*Phantom Start*');
-	console.log('***************');
-	console.log('http://localhost:' + browserInfo.url);
-
-	// main javascrpit part
-	page.open('http://localhost:8080/reg', function(status) {
-		console.log("Status: " + status);
-		if (status === "success") {
-			capture('firstLook');
-
-			var user = fakeUserList[0];
-
-			page.evaluate(function(user) {
-				document.querySelector('input[name="ts_account"]').value = user.accountNPassword;
-				document.querySelector('input[name="ts_account"]').focus();
-			}, user);
-			page.sendEvent('keypress', page.event.key[0]);
-			page.evaluate(function() {
-				document.querySelector('input[name="ts_account"]').blur();
-				document.querySelector('input[name="ts_account"]').focus();
-			});
-			page.sendEvent('keypress', page.event.key.Backspace);
-			page.evaluate(function() {
-				document.querySelector('input[name="ts_account"]').blur();
-			});
-
-			page.evaluate(function(user) {
-				document.querySelector('input[name="ts_password"]').value = user.accountNPassword;
-				document.querySelector('input[name="ts_password"]').focus();
-			}, user);
-			page.sendEvent('keypress', page.event.key[0]);
-			page.evaluate(function() {
-				document.querySelector('input[name="ts_password"]').blur();
-				document.querySelector('input[name="ts_password"]').focus();
-			});
-			page.sendEvent('keypress', page.event.key.Backspace);
-			page.evaluate(function() {
-				document.querySelector('input[name="ts_password"]').blur();
-			});
-
-			page.evaluate(function(user) {
-				document.querySelector('input[name="ts_confirmpassword"]').value = user.accountNPassword;
-				document.querySelector('input[name="ts_confirmpassword"]').focus();
-			}, user);
-			page.sendEvent('keypress', page.event.key[0]);
-			page.evaluate(function() {
-				document.querySelector('input[name="ts_confirmpassword"]').blur();
-				document.querySelector('input[name="ts_confirmpassword"]').focus();
-			});
-			page.sendEvent('keypress', page.event.key.Backspace);
-			page.evaluate(function() {
-				document.querySelector('input[name="ts_confirmpassword"]').blur();
-			});
-
-			page.evaluate(function(user) {
-				document.querySelector('input[name="ts_withdrawals"]').value = user.withdrawal;
-				document.querySelector('input[name="ts_withdrawals"]').focus();
-			}, user);
-			page.sendEvent('keypress', page.event.key[0]);
-			page.evaluate(function() {
-				document.querySelector('input[name="ts_withdrawals"]').blur();
-				document.querySelector('input[name="ts_withdrawals"]').focus();
-			});
-			page.sendEvent('keypress', page.event.key.Backspace);
-			page.evaluate(function() {
-				document.querySelector('input[name="ts_withdrawals"]').blur();
-			});
-
-			page.evaluate(function(user) {
-				document.querySelector('input[name="ts_name"]').value = user.name;
-				document.querySelector('input[name="ts_name"]').focus();
-			}, user);
-			page.sendEvent('keypress', page.event.key[0]);
-			page.evaluate(function() {
-				document.querySelector('input[name="ts_name"]').blur();
-				document.querySelector('input[name="ts_name"]').focus();
-			});
-			page.sendEvent('keypress', page.event.key.Backspace);
-			page.evaluate(function() {
-				document.querySelector('input[name="ts_name"]').blur();
-			});
-
-			page.evaluate(function(user) {
-				document.querySelector('input[name="ts_mail"]').value = user.email;
-				document.querySelector('input[name="ts_mail"]').focus();
-			}, user);
-			page.sendEvent('keypress', page.event.key[0]);
-			page.evaluate(function() {
-				document.querySelector('input[name="ts_mail"]').blur();
-				document.querySelector('input[name="ts_mail"]').focus();
-			});
-			page.sendEvent('keypress', page.event.key.Backspace);
-			page.evaluate(function() {
-				document.querySelector('input[name="ts_mail"]').blur();
-			});
-
-			page.evaluate(function(user) {
-				document.querySelector('input[name="ts_qq"]').value = user.qq;
-				document.querySelector('input[name="ts_qq"]').focus();
-			}, user);
-			page.sendEvent('keypress', page.event.key[0]);
-			page.evaluate(function() {
-				document.querySelector('input[name="ts_qq"]').blur();
-				document.querySelector('input[name="ts_qq"]').focus();
-			});
-			page.sendEvent('keypress', page.event.key.Backspace);
-			page.evaluate(function() {
-				document.querySelector('input[name="ts_qq"]').blur();
-			});
-
-			page.evaluate(function(user) {
-				document.querySelector('input[name="ts_phone"]').value = user.phone;
-				document.querySelector('input[name="ts_phone"]').focus();
-			}, user);
-			page.sendEvent('keypress', page.event.key[0]);
-			page.evaluate(function() {
-				document.querySelector('input[name="ts_phone"]').blur();
-				document.querySelector('input[name="ts_phone"]').focus();
-			});
-			page.sendEvent('keypress', page.event.key.Backspace);
-			page.evaluate(function() {
-				document.querySelector('input[name="ts_phone"]').blur();
-			});
-
-			page.evaluate(function(user) {
-				document.querySelector('input[name="ts_aid"]').value = user.aid;
-				document.querySelector('input[name="ts_aid"]').focus();
-			}, user);
-			page.sendEvent('keypress', page.event.key[0]);
-			page.evaluate(function() {
-				document.querySelector('input[name="ts_aid"]').blur();
-				document.querySelector('input[name="ts_aid"]').focus();
-			});
-			page.sendEvent('keypress', page.event.key.Backspace);
-			page.evaluate(function() {
-				document.querySelector('input[name="ts_aid"]').blur();
-			});
-
-
-
-			page.evaluate(function() {
-				document.querySelector('#registerbtn').click();
-			});
-
-			capture('inputInfo');
-
-			setTimeout(function() {
-				capture('clickRegister');
-				exit();
-			}, 1000);
-			return;
-		}
-
-		console.log("Load Page Failed!");
-		exit();
-
-	});
-}
 
 function start() {
 	console.log('\n***************');
