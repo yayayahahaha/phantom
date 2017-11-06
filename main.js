@@ -1,30 +1,9 @@
 var page = require('webpage').create(),
 	system = require('system'),
 	time = Date.now(),
-	captureNumber = 0,
-	captureSort = 0,
-	baseUrl = "8080",
-	// baseUrl = "8090",
-	// baseUrl = "8091",
-	browserInfo = {
-		url: baseUrl,
-		imageInfo: {
-			directory: baseUrl === '8080' ? 'images/web/' : baseUrl === '8090' ? 'images/admin/' : baseUrl === '8091' ? 'images/reseller/' : 'wrong port',
-			name: 'lv',
-			type: '.png'
-		},
-		size: {
-			width: 1024,
-			height: 500
-		},
-		clipSize: {
-			width: 1024,
-			height: 500
-		}
-	},
 	loginInfo = {
-		userAccount: browserInfo.url === '8080' ? 'flycchung' : browserInfo.url === '8090' ? 'admin' : browserInfo.url === '8091' ? 'bcp88888' : 'wrong port',
-		userPassword: browserInfo.url === '8080' ? '123qwe' : browserInfo.url === '8090' ? 'abc123' : browserInfo.url === '8091' ? 'bcp88888' : 'wrong port',
+		userAccount: 'flycchung',
+		userPassword: '123qwe'
 	};
 
 function _capture(pageObj, input) {
@@ -46,30 +25,6 @@ function _capture(pageObj, input) {
 	}
 }
 
-function capture(input) {
-	captureNumber++;
-	captureSort++;
-
-	imageInfo = typeof input === 'object' ? input : {
-		name: input
-	};
-
-	imageInfo.name = imageInfo.name ? (function() {
-		captureNumber--;
-		return imageInfo.name;
-	})() : 'image_' + captureNumber;
-	imageInfo.type = imageInfo.type ? imageInfo.type : '.png';
-	imageInfo.directory = imageInfo.directory ? imageInfo.directory : browserInfo.imageInfo.directory;
-
-	try {
-		var imagePath = imageInfo.directory + captureSort + '_' + imageInfo.name + imageInfo.type;
-		page.render(imagePath);
-		console.log("Capture: " + imagePath + "\n");
-	} catch (e) {
-		console.log("Capture Failed!: " + imageInfo.directory + imageInfo.name + imageInfo.type + "\n");
-	}
-}
-
 function _login(page, info) {
 	// login
 	page.evaluate(function(loginInfo) {
@@ -80,21 +35,10 @@ function _login(page, info) {
 		document.querySelector('#login-button').click();
 	});
 	// console.log(info.name + ' login function trigger ' + info.mode);
-}
-
-function login(page, o) {
-	// account and password
-	page.evaluate(function(loginInfo) {
-		document.querySelector("#login-username").value = loginInfo.userAccount;
-		document.querySelector("#login-password").value = loginInfo.userPassword;
-
-		setTimeout(function() {
-			document.querySelector('#login-button').click();
-		}, 500);
-	}, loginInfo);
 
 	return;
-	// account
+
+	// frontend project example
 	page.evaluate(function(loginInfo) {
 		document.querySelector("input[name=username]").value = loginInfo.userAccount;
 		document.querySelector("input[name=username]").focus();
@@ -108,38 +52,12 @@ function login(page, o) {
 	page.evaluate(function() {
 		document.querySelector("input[name=username]").blur();
 	});
-
-	// password
-	page.evaluate(function(loginInfo) {
-		document.querySelector("input[name=password]").value = loginInfo.userPassword;
-		document.querySelector("input[name=password]").focus();
-	}, loginInfo);
-	page.sendEvent('keypress', page.event.key.A);
-	page.evaluate(function() {
-		document.querySelector("input[name=password]").blur();
-		document.querySelector("input[name=password]").focus();
-	});
-	page.sendEvent('keypress', page.event.key.Backspace);
-	page.evaluate(function() {
-		document.querySelector("input[name=password]").blur();
-	});
-
-	if (loginInfo.userAccount === 'admin') {
-		// opt
-		page.evaluate(function() {
-			document.querySelector('input[data-bind="textInput: otp"]').focus();
-		});
-		page.sendEvent('keypress', page.event.key[1]);
-		page.evaluate(function() {
-			document.querySelector('input[data-bind="textInput: otp"]').blur();
-		});
-	}
 }
 
 var success = 0,
 	fail = 0;
 
-var testList = [{
+var prod = [{
 	name: 'lv',
 	mode: 'debug',
 	url: 'http://54.65.82.189:8005/'
@@ -169,7 +87,7 @@ var testList = [{
 	url: 'http://13.228.189.233:8005/'
 }];
 
-var testList2 = [{
+var uat = [{
 	name: 'lv',
 	mode: 'uat',
 	url: 'http://lv-web-uat.paradise-soft.com.tw/'
@@ -201,9 +119,10 @@ var testList2 = [{
 
 
 var pageObjectList = [],
-	pageByPage = false;
+	pageByPage = false,
+	testList = [];
 
-testList = testList.concat(testList2);
+testList = prod.concat(uat);
 
 for (var i = 0; i < testList.length; i++) {
 	pageObjectList.push(require('webpage').create());
@@ -224,12 +143,10 @@ function pageOpen(page, info, sec) {
 	};
 
 	page.onResourceError = function(res) {
-
 		return;
 		console.log('Unable to load resource (#' + res.id + 'URL:' + res.url + ')');
 		console.log('Error code: ' + res.errorCode + '. Description: ' + res.errorString);
 		page.onResourceError = function() {};
-
 	};
 
 	var cookieStatus = true;
@@ -244,7 +161,7 @@ function pageOpen(page, info, sec) {
 			}
 		}
 
-		if (/\.xy-web,/.test(cookiesString) && cookieStatus) {
+		if (/-web,/.test(cookiesString) && cookieStatus) {
 			cookieStatus = false;
 			/* which means user has login */
 			page.open(info.url + '/lottery/hk', function(status) {
@@ -302,7 +219,6 @@ function pageOpen(page, info, sec) {
 }
 
 var finishedCount = 0;
-
 function finishedSignal() {
 	finishedCount++;
 	if (finishedCount == testList.length) {
@@ -315,6 +231,14 @@ function finishedSignal() {
 	} else if (pageByPage) {
 		pageOpen(pageObjectList[finishedCount], testList[finishedCount], i);
 	}
+}
+
+function exit() {
+	console.log('\n**************');
+	console.log('*exit Phantom*');
+	console.log('**************');
+	console.log('total time spend: ' + Math.round(((Date.now() - time) / 100)) / 10 + 'sec\n');
+	phantom.exit();
 }
 
 // add server response timeout handler
@@ -337,54 +261,3 @@ page.clipRect = {
 	height: browserInfo.clipSize.height
 };
 */
-
-var fakeUserList = [{
-	accountNPassword: 'fake1fake1',
-	withdrawal: 111111,
-	name: 'fake1',
-	email: 'fake1@fake1.com',
-	qq: '12345',
-	phone: '09123456789',
-	aid: 'fake1',
-}];
-
-function start() {
-	console.log('\n***************');
-	console.log('*Phantom Start*');
-	console.log('***************');
-	console.log('http://localhost:' + browserInfo.url);
-
-	// main javascrpit part
-	page.open('http://localhost:' + browserInfo.url, function(status) {
-		console.log("Status: " + status);
-		if (status === "success") {
-			capture('firstLook');
-			login();
-			capture('afterInputAccountPassword');
-
-			page.evaluate(function() {
-				document.querySelector("button").click();
-			});
-
-			setTimeout(function() {
-				capture('afterLogin');
-				exit();
-			}, 1000);
-
-		} else {
-			console.log("Load Page Failed!");
-			exit();
-		}
-	});
-}
-
-function exit() {
-	console.log('\n**************');
-	console.log('*exit Phantom*');
-	console.log('**************');
-	console.log('total time spend: ' + Math.round(((Date.now() - time) / 100)) / 10 + 'sec\n');
-	phantom.exit();
-}
-
-// start();
-// createWebAccount();
