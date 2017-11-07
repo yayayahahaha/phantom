@@ -166,7 +166,7 @@ var reseller = [{
 		userPassword: 'bcp88888'
 	},
 	setting: {
-		searchLevel: '0' //means querySelectorAll index 3
+		searchLevel: '0' //means querySelectorAll index, not agent level
 	}
 }, {
 	name: 'reseller_dcp99999',
@@ -178,7 +178,7 @@ var reseller = [{
 		userPassword: 'dcp99999'
 	},
 	setting: {
-		searchLevel: '0' //means querySelectorAll index 3
+		searchLevel: '0' //means querySelectorAll index, not agent level
 	}
 }, {
 	name: 'reseller_ccp88889',
@@ -190,7 +190,7 @@ var reseller = [{
 		userPassword: 'ccp88889'
 	},
 	setting: {
-		searchLevel: '0' //means querySelectorAll index 3
+		searchLevel: '0' //means querySelectorAll index, not agent level
 	}
 }];
 
