@@ -156,6 +156,9 @@ var amdin = [{
 		userPassword: 'abc123'
 	}
 }];
+
+var searchLevel = 2;
+
 var reseller = [{
 	name: 'reseller_bcp88888',
 	mode: 'localhost',
@@ -166,7 +169,7 @@ var reseller = [{
 		userPassword: 'bcp88888'
 	},
 	setting: {
-		searchLevel: '0' //means querySelectorAll index, not agent level
+		searchLevel: searchLevel //means querySelectorAll index, not agent level
 	}
 }, {
 	name: 'reseller_dcp99999',
@@ -178,7 +181,7 @@ var reseller = [{
 		userPassword: 'dcp99999'
 	},
 	setting: {
-		searchLevel: '0' //means querySelectorAll index, not agent level
+		searchLevel: searchLevel //means querySelectorAll index, not agent level
 	}
 }, {
 	name: 'reseller_ccp88889',
@@ -190,7 +193,7 @@ var reseller = [{
 		userPassword: 'ccp88889'
 	},
 	setting: {
-		searchLevel: '0' //means querySelectorAll index, not agent level
+		searchLevel: searchLevel //means querySelectorAll index, not agent level
 	}
 }];
 
@@ -222,10 +225,10 @@ function pageOpen(page, info, sec) {
 	};
 	// the clip range of screen shut
 	page.clipRect = {
-		top: 760,
+		top: 0,
 		left: 0,
 		width: 1920,
-		height: 500
+		height: 1200
 	};
 
 
@@ -290,24 +293,49 @@ function pageOpen(page, info, sec) {
 				success++;
 
 				// 修改時間
-				passValidation(page, '[data-bind="with: searchtime"] .col-md-2 input', '2017-10-01 00:00');
+				passValidation(page, '[data-bind="with: searchtime"] .col-md-2 input', '2017-09-01 00:00');
 				passValidation(page, '[data-bind="with: searchtime"] .col-md-2 ~ .col-md-2 input', '2017-11-01 00:00');
 
-				page.evaluate(function(info) {
-					document.querySelectorAll('.col-md-8 label')[info.setting.searchLevel].click();
+				var levelCount = 0;
 
-					document.querySelector('#btnSearch').click();
-				}, info);
+				page.onResourceReceived = function(res) {
+					var keepGoing = res.stage === 'end' && /\/apis\/revenue\?/.test(res.url);
+					if (keepGoing) {
+						page.onResourceReceived = function() {};
+						// this timeout is for knockout
+						levelCount++;
+						setTimeout(function() {
+							_capture(page, {
+								name: info.name
+							});
+							if (levelCount === 4) {
+								finishedSignal();
+							}
+						}, 0);
+					}
+				};
+				for (var i = 0; i < 4; i++) {
+					evaluateForLoop(i);
+				}
 
-				setTimeout(function() {
-					_capture(page, {
-						name: info.name
-					});
-					finishedSignal();
-				}, 1000);
+				function evaluateForLoop(number) {
+					try {
+						setTimeout(function() {
+							page.evaluate(function(number) {
+								try {
+									document.querySelectorAll('.col-md-8 label')[number].click();
+									document.querySelector('#btnSearch').click();
+									console.log('input and click');
+								} catch (e) {
+									console.log('catch from browser');
+								}
+							}, number);
+						}, number * 1000);
+					} catch (e) {
+
+					}
+				}
 			});
-
-
 		}
 	};
 
