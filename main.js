@@ -117,7 +117,7 @@ var uat = [{
 	url: 'http://tz-web-uat.paradise-soft.com.tw/'
 }];
 var localhost = [{
-	name: 'localhost',
+	name: 'localhost_name',
 	mode: 'localhost',
 	url: 'http://localhost:8080/'
 }];
@@ -164,7 +164,7 @@ function pageOpen(page, info, sec) {
 		}
 
 		if (/-web,/.test(cookiesString)) {
-			page.onLoadFinished = function() {}
+			page.onLoadFinished = function() {};
 
 			// which means user has login
 			page.open(info.url + '/lottery/hk', function(status) {
