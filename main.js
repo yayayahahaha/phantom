@@ -4,6 +4,10 @@ var page = require('webpage').create(),
 	loginInfo = {
 		userAccount: 'flycchung',
 		userPassword: '123qwe'
+	},
+	adminLoginInfo = {
+		userAccount: 'admin',
+		userPassword: 'abc123'
 	};
 
 function _capture(pageObj, input) {
@@ -35,23 +39,39 @@ function _login(page, info) {
 		document.querySelector('#login-button').click();
 	});
 	// console.log(info.name + ' login function trigger ' + info.mode);
+}
 
-	return;
-
+function _login_frontend(page, info) {
 	// frontend project example
-	page.evaluate(function(loginInfo) {
-		document.querySelector("input[name=username]").value = loginInfo.userAccount;
-		document.querySelector("input[name=username]").focus();
-	}, loginInfo);
+	pressValidation(page, 'input[name=username]', info.userInfo.userAccount);
+	pressValidation(page, 'input[name=password]', info.userInfo.userPassword);
+	if (info.project === 'admin') {
+		pressValidation(page, 'input[name=otp]', 1);
+	}
+	// return;
+	page.evaluate(function() {
+		document.querySelector('.form-actions button').click();
+	});
+}
+
+function pressValidation(page, query, inputValue) {
+	var input = {
+		query: query,
+		inputValue: inputValue
+	};
+	page.evaluate(function(input) {
+		document.querySelector(input.query).value = input.inputValue;
+		document.querySelector(input.query).focus();
+	}, input);
 	page.sendEvent('keypress', page.event.key.A);
-	page.evaluate(function() {
-		document.querySelector("input[name=username]").blur();
-		document.querySelector("input[name=username]").focus();
-	});
+	page.evaluate(function(input) {
+		document.querySelector(input.query).blur();
+		document.querySelector(input.query).focus();
+	}, input);
 	page.sendEvent('keypress', page.event.key.Backspace);
-	page.evaluate(function() {
-		document.querySelector("input[name=username]").blur();
-	});
+	page.evaluate(function(input) {
+		document.querySelector(input.query).blur();
+	}, input);
 }
 
 var success = 0,
@@ -119,7 +139,12 @@ var uat = [{
 var localhost = [{
 	name: 'localhost_name',
 	mode: 'localhost',
-	url: 'http://localhost:8080/'
+	url: 'http://localhost:8090/',
+	project: 'admin',
+	userInfo: {
+		userAccount: 'admin',
+		userPassword: 'abc123'
+	}
 }];
 
 var pageObjectList = [],
@@ -145,13 +170,6 @@ function pageOpen(page, info, sec) {
 
 	page.onConsoleMessage = function(msg) {
 		console.log(msg);
-	};
-
-	page.onResourceError = function(res) {
-		return;
-		console.log('Unable to load resource (#' + res.id + 'URL:' + res.url + ')');
-		console.log('Error code: ' + res.errorCode + '. Description: ' + res.errorString);
-		page.onResourceError = function() {};
 	};
 
 	page.onLoadFinished = function(input, ar2) {
@@ -205,20 +223,41 @@ function pageOpen(page, info, sec) {
 				}
 			});
 		}
-
 	};
 
 	page.clearCookies();
-	page.open(info.url + 'm/login', function(status) {
-		if (status === 'fail') {
-			fail++;
-			finishedSignal();
-			page.close();
-			return;
-		}
-		console.log('status: ' + status);
-		_login(page, info);
-	});
+
+	switch (info.project) {
+		case 'admin':
+			page.open(info.url, function(status) {
+				if (status === 'fail') {
+					fail++;
+					finishedSignal();
+					page.close();
+					return;
+				}
+				console.log('status: ' + status);
+				_login_frontend(page, info);
+				setTimeout(function() {
+					_capture(page);
+					finishedSignal();
+				}, 3000);
+			});
+			break;
+
+		default:
+			page.open(info.url + 'm/login', function(status) {
+				if (status === 'fail') {
+					fail++;
+					finishedSignal();
+					page.close();
+					return;
+				}
+				console.log('status: ' + status);
+				_login(page, info);
+			});
+			break;
+	}
 }
 
 var finishedCount = 0;
