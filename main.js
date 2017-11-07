@@ -76,9 +76,10 @@ function passValidation(page, query, inputValue) {
 
 function failTest(status) {
 	if (status === 'fail') {
+		console.log('failTest Trigger!');
+		page.close();
 		fail++;
 		finishedSignal();
-		page.close();
 		return;
 	}
 }
@@ -145,7 +146,7 @@ var uat = [{
 	mode: 'uat',
 	url: 'http://tz-web-uat.paradise-soft.com.tw/'
 }];
-var localhost = [{
+var amdin = [{
 	name: 'admin',
 	mode: 'localhost',
 	url: 'http://localhost:8090/',
@@ -154,10 +155,11 @@ var localhost = [{
 		userAccount: 'admin',
 		userPassword: 'abc123'
 	}
-}, {
+}];
+var reseller = [{
 	name: 'reseller',
 	mode: 'localhost',
-	url: 'http://localhost:8091',
+	url: 'http://localhost:8091/',
 	project: 'reseller',
 	userInfo: {
 		userAccount: 'bcp88888',
@@ -170,7 +172,7 @@ var pageObjectList = [],
 	testList = [];
 
 // testList = prod.concat(uat);
-testList = localhost;
+testList = reseller;
 
 for (var i = 0; i < testList.length; i++) {
 	pageObjectList.push(require('webpage').create());
@@ -188,15 +190,15 @@ function pageOpen(page, info, sec) {
 
 	// the size of browser
 	page.viewportSize = {
-		width: 1024,
-		height: 768
+		width: 1920,
+		height: 1200
 	};
 	// the clip range of screen shut
 	page.clipRect = {
 		top: 0,
 		left: 0,
-		width: 1024,
-		height: 768
+		width: 1920,
+		height: 1200
 	};
 
 
@@ -205,8 +207,10 @@ function pageOpen(page, info, sec) {
 	};
 
 	page.onLoadFinished = function(input, ar2) {
-		console.log('onLoadFinished: ' + input);
-		console.log('page.url: ' + page.url);
+		/*
+				console.log('onLoadFinished: ' + input);
+				console.log('page.url: ' + page.url);
+		*/
 
 		var cookiesString = '';
 		for (var i = 0; i < page.cookies.length; i++) {
@@ -256,20 +260,14 @@ function pageOpen(page, info, sec) {
 
 	switch (info.project) {
 		case 'admin':
-			page.open(info.url, function(status) {
+			page.open(info.url + 'login', function(status) {
+				console.log('status: ' + status);
 				failTest(status);
 
-				console.log('status: ' + status);
 				_login_frontend(page, info);
+
 				setTimeout(function() {
 					_capture(page);
-
-					page.open(info.url + 'betanalysis', function(status) {
-						failTest(status);
-
-					});
-
-
 					finishedSignal();
 				}, 3000);
 			});
@@ -280,10 +278,25 @@ function pageOpen(page, info, sec) {
 
 				console.log('status: ' + status);
 				_login_frontend(page, info);
+
 				setTimeout(function() {
-					_capture(page);
-					finishedSignal();
-				}, 3000);
+					page.open(info.url + 'betanalysis', function(status) {
+						failTest(status);
+						success++;
+
+						passValidation(page, '[data-bind="with: searchtime"] .col-md-2 input', '2017-10-01 00:00');
+						passValidation(page, '[data-bind="with: searchtime"] .col-md-2 ~ .col-md-2 input', '2017-11-01 00:00');
+
+						page.evaluate(function() {
+							document.querySelector('#btnSearch').click();
+						});
+
+						setTimeout(function() {
+							_capture(page);
+							finishedSignal();
+						}, 3000);
+					});
+				}, 2000);
 			});
 			break;
 
