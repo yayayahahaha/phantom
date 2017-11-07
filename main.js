@@ -74,6 +74,15 @@ function passValidation(page, query, inputValue) {
 	}, input);
 }
 
+function failTest(status) {
+	if (status === 'fail') {
+		fail++;
+		finishedSignal();
+		page.close();
+		return;
+	}
+}
+
 var success = 0,
 	fail = 0;
 
@@ -210,12 +219,7 @@ function pageOpen(page, info, sec) {
 			// which means user has login
 			page.open(info.url + '/lottery/hk', function(status) {
 				console.log(info.name + " " + status);
-				if (status === 'fail') {
-					fail++;
-					finishedSignal();
-					page.close();
-					return;
-				}
+				failTest(status);
 				success++;
 
 				page.evaluate(function(info) {
@@ -253,28 +257,27 @@ function pageOpen(page, info, sec) {
 	switch (info.project) {
 		case 'admin':
 			page.open(info.url, function(status) {
-				if (status === 'fail') {
-					fail++;
-					finishedSignal();
-					page.close();
-					return;
-				}
+				failTest(status);
+
 				console.log('status: ' + status);
 				_login_frontend(page, info);
 				setTimeout(function() {
 					_capture(page);
+
+					page.open(info.url + 'betanalysis', function(status) {
+						failTest(status);
+
+					});
+
+
 					finishedSignal();
 				}, 3000);
 			});
 			break;
 		case 'reseller':
 			page.open(info.url, function(status) {
-				if (status === 'fail') {
-					fail++;
-					finishedSignal();
-					page.close();
-					return;
-				}
+				failTest(status);
+
 				console.log('status: ' + status);
 				_login_frontend(page, info);
 				setTimeout(function() {
