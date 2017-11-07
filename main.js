@@ -157,18 +157,45 @@ var amdin = [{
 	}
 }];
 var reseller = [{
-	name: 'reseller',
+	name: 'reseller_bcp88888',
 	mode: 'localhost',
 	url: 'http://localhost:8091/',
 	project: 'reseller',
 	userInfo: {
 		userAccount: 'bcp88888',
 		userPassword: 'bcp88888'
+	},
+	setting: {
+		searchLevel: '0' //means querySelectorAll index 3
+	}
+}, {
+	name: 'reseller_dcp99999',
+	mode: 'localhost',
+	url: 'http://localhost:8091/',
+	project: 'reseller',
+	userInfo: {
+		userAccount: 'dcp99999',
+		userPassword: 'dcp99999'
+	},
+	setting: {
+		searchLevel: '0' //means querySelectorAll index 3
+	}
+}, {
+	name: 'reseller_ccp88889',
+	mode: 'localhost',
+	url: 'http://localhost:8091/',
+	project: 'reseller',
+	userInfo: {
+		userAccount: 'ccp88889',
+		userPassword: 'ccp88889'
+	},
+	setting: {
+		searchLevel: '0' //means querySelectorAll index 3
 	}
 }];
 
 var pageObjectList = [],
-	pageByPage = false,
+	pageByPage = true,
 	testList = [];
 
 // testList = prod.concat(uat);
@@ -177,9 +204,9 @@ testList = reseller;
 for (var i = 0; i < testList.length; i++) {
 	pageObjectList.push(require('webpage').create());
 	var p = pageObjectList[i];
-	pageOpen(pageObjectList[i], testList[i], i);
+	// pageOpen(pageObjectList[i], testList[i], i);
 }
-// pageOpen(pageObjectList[0], testList[0], i);
+pageOpen(pageObjectList[0], testList[0], i);
 
 function pageOpen(page, info, sec) {
 	console.log('\n***************');
@@ -195,10 +222,10 @@ function pageOpen(page, info, sec) {
 	};
 	// the clip range of screen shut
 	page.clipRect = {
-		top: 0,
+		top: 760,
 		left: 0,
 		width: 1920,
-		height: 1200
+		height: 500
 	};
 
 
@@ -254,6 +281,34 @@ function pageOpen(page, info, sec) {
 				}
 			});
 		}
+		if (/-reseller,/.test(cookiesString)) {
+			page.onLoadFinished = function() {};
+
+			page.open(info.url + 'betanalysis', function(status) {
+				console.log("status: " + status);
+				failTest(status);
+				success++;
+
+				// 修改時間
+				passValidation(page, '[data-bind="with: searchtime"] .col-md-2 input', '2017-10-01 00:00');
+				passValidation(page, '[data-bind="with: searchtime"] .col-md-2 ~ .col-md-2 input', '2017-11-01 00:00');
+
+				page.evaluate(function(info) {
+					document.querySelectorAll('.col-md-8 label')[info.setting.searchLevel].click();
+
+					document.querySelector('#btnSearch').click();
+				}, info);
+
+				setTimeout(function() {
+					_capture(page, {
+						name: info.name
+					});
+					finishedSignal();
+				}, 1000);
+			});
+
+
+		}
 	};
 
 	page.clearCookies();
@@ -278,25 +333,6 @@ function pageOpen(page, info, sec) {
 
 				console.log('status: ' + status);
 				_login_frontend(page, info);
-
-				setTimeout(function() {
-					page.open(info.url + 'betanalysis', function(status) {
-						failTest(status);
-						success++;
-
-						passValidation(page, '[data-bind="with: searchtime"] .col-md-2 input', '2017-10-01 00:00');
-						passValidation(page, '[data-bind="with: searchtime"] .col-md-2 ~ .col-md-2 input', '2017-11-01 00:00');
-
-						page.evaluate(function() {
-							document.querySelector('#btnSearch').click();
-						});
-
-						setTimeout(function() {
-							_capture(page);
-							finishedSignal();
-						}, 3000);
-					});
-				}, 2000);
 			});
 			break;
 
