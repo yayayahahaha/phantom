@@ -43,10 +43,10 @@ function _login(page, info) {
 
 function _login_frontend(page, info) {
 	// frontend project example
-	pressValidation(page, 'input[name=username]', info.userInfo.userAccount);
-	pressValidation(page, 'input[name=password]', info.userInfo.userPassword);
+	passValidation(page, 'input[name=username]', info.userInfo.userAccount);
+	passValidation(page, 'input[name=password]', info.userInfo.userPassword);
 	if (info.project === 'admin') {
-		pressValidation(page, 'input[name=otp]', 1);
+		passValidation(page, 'input[name=otp]', 1);
 	}
 	// return;
 	page.evaluate(function() {
@@ -54,7 +54,7 @@ function _login_frontend(page, info) {
 	});
 }
 
-function pressValidation(page, query, inputValue) {
+function passValidation(page, query, inputValue) {
 	var input = {
 		query: query,
 		inputValue: inputValue
