@@ -116,13 +116,18 @@ var uat = [{
 	mode: 'uat',
 	url: 'http://tz-web-uat.paradise-soft.com.tw/'
 }];
-
+var localhost = [{
+	name: 'localhost',
+	mode: 'localhost',
+	url: 'http://localhost:8080/'
+}];
 
 var pageObjectList = [],
 	pageByPage = false,
 	testList = [];
 
-testList = prod.concat(uat);
+// testList = prod.concat(uat);
+testList = localhost;
 
 for (var i = 0; i < testList.length; i++) {
 	pageObjectList.push(require('webpage').create());
@@ -149,7 +154,6 @@ function pageOpen(page, info, sec) {
 		page.onResourceError = function() {};
 	};
 
-	var cookieStatus = true;
 	page.onLoadFinished = function(input, ar2) {
 		console.log('onLoadFinished: ' + input);
 		console.log('page.url: ' + page.url);
@@ -159,9 +163,10 @@ function pageOpen(page, info, sec) {
 			cookiesString += (page.cookies[i].name) + ',';
 		}
 
-		if (/-web,/.test(cookiesString) && cookieStatus) {
-			cookieStatus = false;
-			/* which means user has login */
+		if (/-web,/.test(cookiesString)) {
+			page.onLoadFinished = function() {}
+
+			// which means user has login
 			page.open(info.url + '/lottery/hk', function(status) {
 				console.log(info.name + " " + status);
 				if (status === 'fail') {
@@ -217,6 +222,7 @@ function pageOpen(page, info, sec) {
 }
 
 var finishedCount = 0;
+
 function finishedSignal() {
 	finishedCount++;
 	if (finishedCount == testList.length) {
