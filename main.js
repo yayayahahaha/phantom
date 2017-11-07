@@ -168,6 +168,20 @@ function pageOpen(page, info, sec) {
 	console.log(info.name);
 	console.log(info.url);
 
+	// the size of browser
+	page.viewportSize = {
+		width: 1024,
+		height: 768
+	};
+	// the clip range of screen shut
+	page.clipRect = {
+		top: 0,
+		left: 0,
+		width: 1024,
+		height: 768
+	};
+
+
 	page.onConsoleMessage = function(msg) {
 		console.log(msg);
 	};
@@ -287,20 +301,3 @@ function exit() {
 // add server response timeout handler
 page.settings.resourceTimeout = 60000;
 
-// the size of browser
-/*
-page.viewportSize = {
-	width: browserInfo.size.width,
-	height: browserInfo.size.height
-};
-*/
-
-// the clip range of screen shut
-/*
-page.clipRect = {
-	top: 0,
-	left: 0,
-	width: browserInfo.clipSize.width,
-	height: browserInfo.clipSize.height
-};
-*/
