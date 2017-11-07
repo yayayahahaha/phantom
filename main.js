@@ -137,13 +137,22 @@ var uat = [{
 	url: 'http://tz-web-uat.paradise-soft.com.tw/'
 }];
 var localhost = [{
-	name: 'localhost_name',
+	name: 'admin',
 	mode: 'localhost',
 	url: 'http://localhost:8090/',
 	project: 'admin',
 	userInfo: {
 		userAccount: 'admin',
 		userPassword: 'abc123'
+	}
+}, {
+	name: 'reseller',
+	mode: 'localhost',
+	url: 'http://localhost:8091',
+	project: 'reseller',
+	userInfo: {
+		userAccount: 'bcp88888',
+		userPassword: 'bcp88888'
 	}
 }];
 
@@ -258,6 +267,22 @@ function pageOpen(page, info, sec) {
 				}, 3000);
 			});
 			break;
+		case 'reseller':
+			page.open(info.url, function(status) {
+				if (status === 'fail') {
+					fail++;
+					finishedSignal();
+					page.close();
+					return;
+				}
+				console.log('status: ' + status);
+				_login_frontend(page, info);
+				setTimeout(function() {
+					_capture(page);
+					finishedSignal();
+				}, 3000);
+			});
+			break;
 
 		default:
 			page.open(info.url + 'm/login', function(status) {
@@ -300,4 +325,3 @@ function exit() {
 
 // add server response timeout handler
 page.settings.resourceTimeout = 60000;
-
