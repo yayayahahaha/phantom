@@ -1,14 +1,5 @@
-var page = require('webpage').create(),
-	system = require('system'),
-	time = Date.now(),
-	loginInfo = {
-		userAccount: 'flycchung',
-		userPassword: '123qwe'
-	},
-	adminLoginInfo = {
-		userAccount: 'admin',
-		userPassword: 'abc123'
-	};
+var system = require('system'),
+	time = Date.now();
 
 function _capture(pageObj, input) {
 	imageInfo = typeof input === 'object' ? input : {
@@ -29,25 +20,10 @@ function _capture(pageObj, input) {
 	}
 }
 
-function _login(page, info) {
-	// login
-	page.evaluate(function(loginInfo) {
-		document.querySelector("#login-username").value = loginInfo.userAccount;
-		document.querySelector("#login-password").value = loginInfo.userPassword;
-	}, loginInfo);
-	page.evaluate(function() {
-		document.querySelector('#login-button').click();
-	});
-	// console.log(info.name + ' login function trigger ' + info.mode);
-}
-
 function _login_frontend(page, info) {
 	// frontend project example
 	passValidation(page, 'input[name=username]', info.userInfo.userAccount);
 	passValidation(page, 'input[name=password]', info.userInfo.userPassword);
-	if (info.project === 'admin') {
-		passValidation(page, 'input[name=otp]', 1);
-	}
 	// return;
 	page.evaluate(function() {
 		document.querySelector('.form-actions button').click();
@@ -87,83 +63,17 @@ function failTest(status) {
 var success = 0,
 	fail = 0;
 
-var prod = [{
-	name: 'lv',
-	mode: 'debug',
-	url: 'http://54.65.82.189:8005/'
-}, {
-	name: 'hy',
-	mode: 'debug',
-	url: 'http://52.78.16.76:8005/'
-}, {
-	name: 'ls',
-	mode: 'debug',
-	url: 'http://13.229.24.190:8005/'
-}, {
-	name: 'c7',
-	mode: 'debug',
-	url: 'http://13.229.32.176:8005/'
-}, {
-	name: 'c8',
-	mode: 'debug',
-	url: 'http://13.229.18.197:8005/'
-}, {
-	name: 'bh',
-	mode: 'debug',
-	url: 'http://13.229.26.202:8005/'
-}, {
-	name: 'tz',
-	mode: 'debug',
-	url: 'http://13.228.189.233:8005/'
-}];
-
-var uat = [{
-	name: 'lv',
-	mode: 'uat',
-	url: 'http://lv-web-uat.paradise-soft.com.tw/'
-}, {
-	name: 'hy',
-	mode: 'uat',
-	url: 'http://hy-web-uat.paradise-soft.com.tw/'
-}, {
-	name: 'ls',
-	mode: 'uat',
-	url: 'http://ls-web-uat.paradise-soft.com.tw/'
-}, {
-	name: 'c7',
-	mode: 'uat',
-	url: 'http://c7-web-uat.paradise-soft.com.tw/'
-}, {
-	name: 'c8',
-	mode: 'uat',
-	url: 'http://c8-web-uat.paradise-soft.com.tw/'
-}, {
-	name: 'bh',
-	mode: 'uat',
-	url: 'http://bh-web-uat.paradise-soft.com.tw/'
-}, {
-	name: 'tz',
-	mode: 'uat',
-	url: 'http://tz-web-uat.paradise-soft.com.tw/'
-}];
-var amdin = [{
-	name: 'admin',
-	mode: 'localhost',
-	url: 'http://localhost:8090/',
-	project: 'admin',
-	userInfo: {
-		userAccount: 'admin',
-		userPassword: 'abc123'
-	}
-}];
-
 var searchLevel = 2;
+
+var uatLinkArray = ['http://bh-reseller-uat.paradise-soft.com.tw/', 'http://c7-reseller-uat.paradise-soft.com.tw/', 'http://c8-reseller-uat.paradise-soft.com.tw/', 'http://hy-reseller-uat.paradise-soft.com.tw/', 'http://ls-reseller-uat.paradise-soft.com.tw/', 'http://lv-reseller-uat.paradise-soft.com.tw/', 'http://tz-reseller-uat.paradise-soft.com.tw/'];
+var testUserArray = ['bcp88888', 'dcp99999', 'ccp88889'];
+
+
 
 var reseller = [{
 	name: 'reseller_bcp88888',
 	mode: 'localhost',
 	url: 'http://localhost:8091/',
-	project: 'reseller',
 	userInfo: {
 		userAccount: 'bcp88888',
 		userPassword: 'bcp88888'
@@ -175,7 +85,6 @@ var reseller = [{
 	name: 'reseller_dcp99999',
 	mode: 'localhost',
 	url: 'http://localhost:8091/',
-	project: 'reseller',
 	userInfo: {
 		userAccount: 'dcp99999',
 		userPassword: 'dcp99999'
@@ -187,7 +96,6 @@ var reseller = [{
 	name: 'reseller_ccp88889',
 	mode: 'localhost',
 	url: 'http://localhost:8091/',
-	project: 'reseller',
 	userInfo: {
 		userAccount: 'ccp88889',
 		userPassword: 'ccp88889'
@@ -201,7 +109,6 @@ var pageObjectList = [],
 	pageByPage = true,
 	testList = [];
 
-// testList = prod.concat(uat);
 testList = reseller;
 
 for (var i = 0; i < testList.length; i++) {
@@ -231,7 +138,6 @@ function pageOpen(page, info, sec) {
 		height: 1200
 	};
 
-
 	page.onConsoleMessage = function(msg) {
 		console.log(msg);
 	};
@@ -247,43 +153,6 @@ function pageOpen(page, info, sec) {
 			cookiesString += (page.cookies[i].name) + ',';
 		}
 
-		if (/-web,/.test(cookiesString)) {
-			page.onLoadFinished = function() {};
-
-			// which means user has login
-			page.open(info.url + '/lottery/hk', function(status) {
-				console.log(info.name + " " + status);
-				failTest(status);
-				success++;
-
-				page.evaluate(function(info) {
-					try {
-						document.querySelector('.howToPlay.first > a').click();
-						document.querySelector(".pop_content.rule_pop").scrollTop = 5331;
-					} catch (e) {
-						console.log("error! " + info.name);
-					}
-				}, info);
-
-				if (pageByPage) {
-					_capture(page, {
-						name: info.name + "_" + info.mode
-					});
-
-					finishedSignal();
-					page.close();
-				} else {
-					setTimeout(function() {
-						_capture(page, {
-							name: info.name + "_" + info.mode
-						});
-
-						finishedSignal();
-						page.close();
-					}, 0);
-				}
-			});
-		}
 		if (/-reseller,/.test(cookiesString)) {
 			page.onLoadFinished = function() {};
 
@@ -340,47 +209,15 @@ function pageOpen(page, info, sec) {
 	};
 
 	page.clearCookies();
+	page.open(info.url, function(status) {
+		failTest(status);
 
-	switch (info.project) {
-		case 'admin':
-			page.open(info.url + 'login', function(status) {
-				console.log('status: ' + status);
-				failTest(status);
-
-				_login_frontend(page, info);
-
-				setTimeout(function() {
-					_capture(page);
-					finishedSignal();
-				}, 3000);
-			});
-			break;
-		case 'reseller':
-			page.open(info.url, function(status) {
-				failTest(status);
-
-				console.log('status: ' + status);
-				_login_frontend(page, info);
-			});
-			break;
-
-		default:
-			page.open(info.url + 'm/login', function(status) {
-				if (status === 'fail') {
-					fail++;
-					finishedSignal();
-					page.close();
-					return;
-				}
-				console.log('status: ' + status);
-				_login(page, info);
-			});
-			break;
-	}
+		console.log('status: ' + status);
+		_login_frontend(page, info);
+	});
 }
 
 var finishedCount = 0;
-
 function finishedSignal() {
 	finishedCount++;
 	if (finishedCount == testList.length) {
