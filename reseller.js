@@ -65,43 +65,31 @@ var success = 0,
 
 var searchLevel = 2;
 
-var uatLinkArray = ['http://bh-reseller-uat.paradise-soft.com.tw/', 'http://c7-reseller-uat.paradise-soft.com.tw/', 'http://c8-reseller-uat.paradise-soft.com.tw/', 'http://hy-reseller-uat.paradise-soft.com.tw/', 'http://ls-reseller-uat.paradise-soft.com.tw/', 'http://lv-reseller-uat.paradise-soft.com.tw/', 'http://tz-reseller-uat.paradise-soft.com.tw/'];
-var testUserArray = ['bcp88888', 'dcp99999', 'ccp88889'];
+var uatLinkArray =
+	[
+		'http://bh-reseller-uat.paradise-soft.com.tw/',
+		'http://c7-reseller-uat.paradise-soft.com.tw/',
+		'http://c8-reseller-uat.paradise-soft.com.tw/',
+		'http://hy-reseller-uat.paradise-soft.com.tw/',
+		'http://ls-reseller-uat.paradise-soft.com.tw/',
+		'http://lv-reseller-uat.paradise-soft.com.tw/',
+		'http://tz-reseller-uat.paradise-soft.com.tw/'
+	];
+var testUserArray =
+	[
+		{
+			userAccount: 'bcp88888',
+			userPassword: 'bcp88888'
+		}, {
+			userAccount: 'dcp99999',
+			userPassword: 'dcp99999'
+		}, {
+			userAccount: 'ccp88889',
+			userPassword: 'ccp88889'
+		}
+	];
 
-var reseller = [{
-	name: 'reseller_bcp88888',
-	mode: 'localhost',
-	url: 'http://localhost:8091/',
-	userInfo: {
-		userAccount: 'bcp88888',
-		userPassword: 'bcp88888'
-	},
-	setting: {
-		searchLevel: searchLevel //means querySelectorAll index, not agent level
-	}
-}, {
-	name: 'reseller_dcp99999',
-	mode: 'localhost',
-	url: 'http://localhost:8091/',
-	userInfo: {
-		userAccount: 'dcp99999',
-		userPassword: 'dcp99999'
-	},
-	setting: {
-		searchLevel: searchLevel //means querySelectorAll index, not agent level
-	}
-}, {
-	name: 'reseller_ccp88889',
-	mode: 'localhost',
-	url: 'http://localhost:8091/',
-	userInfo: {
-		userAccount: 'ccp88889',
-		userPassword: 'ccp88889'
-	},
-	setting: {
-		searchLevel: searchLevel //means querySelectorAll index, not agent level
-	}
-}];
+var reseller = [];
 
 var pageObjectList = [],
 	pageByPage = true,
