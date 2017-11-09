@@ -51,7 +51,7 @@ function passValidation(page, query, inputValue) {
 }
 
 function failTest(status) {
-	if (status === 'fail') {
+	if (status !== 'success') {
 		console.log('failTest Trigger!');
 		page.close();
 		fail++;
@@ -76,20 +76,33 @@ var uatLinkArray =
 		'http://tz-reseller-uat.paradise-soft.com.tw/'
 	];
 var testUserArray =
-	[
-		{
-			userAccount: 'bcp88888',
-			userPassword: 'bcp88888'
-		}, {
-			userAccount: 'dcp99999',
-			userPassword: 'dcp99999'
-		}, {
-			userAccount: 'ccp88889',
-			userPassword: 'ccp88889'
-		}
-	];
+	[{
+		userAccount: 'bcp88888',
+		userPassword: 'bcp88888'
+	}, {
+		userAccount: 'ccp88888',
+		userPassword: 'ccp88888'
+	}, {
+		userAccount: 'testtest',
+		userPassword: 'testtest'
+	}];
 
 var reseller = [];
+for (var i = 0; i < uatLinkArray.length; i++) {
+	link = uatLinkArray[i];
+	for (var j = 0; j < testUserArray.length; j++) {
+		user = testUserArray[j];
+		reseller.push({
+			name: 'reseller_' + link[7] + link[8] + '_' + user.userAccount,
+			mode: 'uat',
+			url: link,
+			userInfo: {
+				userAccount: user.userAccount,
+				userPassword: user.userPassword
+			}
+		});
+	}
+}
 
 var pageObjectList = [],
 	pageByPage = true,
@@ -103,6 +116,44 @@ for (var i = 0; i < testList.length; i++) {
 	// pageOpen(pageObjectList[i], testList[i], i);
 }
 pageOpen(pageObjectList[0], testList[0], i);
+
+function testingThing(page, info, sec) {
+	page.open(info.url + 'betanalysis', function(status) {
+		console.log("status: betanalysis page" + status);
+		failTest(status);
+		success++;
+
+		// 修改時間
+		passValidation(page, '[data-bind="with: searchtime"] .col-md-2 input', '2017-09-01 00:00');
+		passValidation(page, '[data-bind="with: searchtime"] .col-md-2 ~ .col-md-2 input', '2017-11-01 00:00');
+
+		var levelCount = 0;
+
+		_capture(page, {
+			name: info.name
+		});
+
+		finishedSignal();
+		/*
+		page.onResourceReceived = function(res) {
+			var keepGoing = res.stage === 'end' && /\/apis\/revenue\?/.test(res.url);
+			if (keepGoing) {
+				page.onResourceReceived = function() {};
+				// this timeout is for knockout
+				levelCount++;
+				setTimeout(function() {
+					_capture(page, {
+						name: info.name
+					});
+					if (levelCount === 4) {
+						finishedSignal();
+					}
+				}, 0);
+			}
+		};
+		*/
+	});
+}
 
 function pageOpen(page, info, sec) {
 	console.log('\n***************');
@@ -128,65 +179,50 @@ function pageOpen(page, info, sec) {
 		console.log(msg);
 	};
 
-	page.onLoadFinished = function(input, ar2) {
-		var cookiesString = '';
-		for (var i = 0; i < page.cookies.length; i++) {
-			cookiesString += (page.cookies[i].name) + ',';
+	page.onResourceReceived = function(input) {
+		if (/\/apis\/session/.test(input.url)) {
+			if (input.stage === 'end') {
+				if (input.status != 500) {
+					var cookiesString = '';
+					for (var i = 0; i < page.cookies.length; i++) {
+						cookiesString += (page.cookies[i].name) + ',';
+					}
+
+					if (/-reseller,/.test(cookiesString)) {
+						page.onResourceReceived = function() {};
+						testingThing(page, info, sec);
+					}
+				} else {
+					console.log(info.name + ' login fail!');
+					_capture(page, {
+						name: info.name + "_login_fail"
+					});
+					fail++;
+					finishedSignal();
+				}
+			}
 		}
 
-		if (/-reseller,/.test(cookiesString)) {
-			page.onLoadFinished = function() {};
-			testingThing(page, info, sec);
-		}
+	};
+
+	page.onLoadFinished = function(input, ar2) {
+
 	};
 
 	page.clearCookies();
 	page.open(info.url, function(status) {
 		failTest(status);
 
-		console.log('status: ' + status);
+		console.log('status: landing page ' + status);
 		_login_frontend(page, info);
 	});
-}
-
-function testingThing(page, info, sec) {
-
-	page.open(info.url + 'betanalysis', function(status) {
-		console.log("status: " + status);
-		failTest(status);
-		success++;
-
-		// 修改時間
-		passValidation(page, '[data-bind="with: searchtime"] .col-md-2 input', '2017-09-01 00:00');
-		passValidation(page, '[data-bind="with: searchtime"] .col-md-2 ~ .col-md-2 input', '2017-11-01 00:00');
-
-		var levelCount = 0;
-
-		page.onResourceReceived = function(res) {
-			var keepGoing = res.stage === 'end' && /\/apis\/revenue\?/.test(res.url);
-			if (keepGoing) {
-				page.onResourceReceived = function() {};
-				// this timeout is for knockout
-				levelCount++;
-				setTimeout(function() {
-					_capture(page, {
-						name: info.name
-					});
-					if (levelCount === 4) {
-						finishedSignal();
-					}
-				}, 0);
-			}
-		};
-	});
-
 }
 
 var finishedCount = 0;
 
 function finishedSignal() {
 	finishedCount++;
-	if (finishedCount == testList.length) {
+	if (finishedCount == (uatLinkArray.length * testUserArray.length)) {
 		console.log('phantom will exit after 1 sec!');
 		setTimeout(function() {
 			console.log("success: " + success);
@@ -205,6 +241,3 @@ function exit() {
 	console.log('total time spend: ' + Math.round(((Date.now() - time) / 100)) / 10 + 'sec\n');
 	phantom.exit();
 }
-
-// add server response timeout handler
-page.settings.resourceTimeout = 60000;
