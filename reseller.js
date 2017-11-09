@@ -68,8 +68,6 @@ var searchLevel = 2;
 var uatLinkArray = ['http://bh-reseller-uat.paradise-soft.com.tw/', 'http://c7-reseller-uat.paradise-soft.com.tw/', 'http://c8-reseller-uat.paradise-soft.com.tw/', 'http://hy-reseller-uat.paradise-soft.com.tw/', 'http://ls-reseller-uat.paradise-soft.com.tw/', 'http://lv-reseller-uat.paradise-soft.com.tw/', 'http://tz-reseller-uat.paradise-soft.com.tw/'];
 var testUserArray = ['bcp88888', 'dcp99999', 'ccp88889'];
 
-
-
 var reseller = [{
 	name: 'reseller_bcp88888',
 	mode: 'localhost',
@@ -143,11 +141,6 @@ function pageOpen(page, info, sec) {
 	};
 
 	page.onLoadFinished = function(input, ar2) {
-		/*
-				console.log('onLoadFinished: ' + input);
-				console.log('page.url: ' + page.url);
-		*/
-
 		var cookiesString = '';
 		for (var i = 0; i < page.cookies.length; i++) {
 			cookiesString += (page.cookies[i].name) + ',';
@@ -155,56 +148,7 @@ function pageOpen(page, info, sec) {
 
 		if (/-reseller,/.test(cookiesString)) {
 			page.onLoadFinished = function() {};
-
-			page.open(info.url + 'betanalysis', function(status) {
-				console.log("status: " + status);
-				failTest(status);
-				success++;
-
-				// 修改時間
-				passValidation(page, '[data-bind="with: searchtime"] .col-md-2 input', '2017-09-01 00:00');
-				passValidation(page, '[data-bind="with: searchtime"] .col-md-2 ~ .col-md-2 input', '2017-11-01 00:00');
-
-				var levelCount = 0;
-
-				page.onResourceReceived = function(res) {
-					var keepGoing = res.stage === 'end' && /\/apis\/revenue\?/.test(res.url);
-					if (keepGoing) {
-						page.onResourceReceived = function() {};
-						// this timeout is for knockout
-						levelCount++;
-						setTimeout(function() {
-							_capture(page, {
-								name: info.name
-							});
-							if (levelCount === 4) {
-								finishedSignal();
-							}
-						}, 0);
-					}
-				};
-				for (var i = 0; i < 4; i++) {
-					evaluateForLoop(i);
-				}
-
-				function evaluateForLoop(number) {
-					try {
-						setTimeout(function() {
-							page.evaluate(function(number) {
-								try {
-									document.querySelectorAll('.col-md-8 label')[number].click();
-									document.querySelector('#btnSearch').click();
-									console.log('input and click');
-								} catch (e) {
-									console.log('catch from browser');
-								}
-							}, number);
-						}, number * 1000);
-					} catch (e) {
-
-					}
-				}
-			});
+			testingThing(page, info, sec);
 		}
 	};
 
@@ -217,7 +161,41 @@ function pageOpen(page, info, sec) {
 	});
 }
 
+function testingThing(page, info, sec) {
+
+	page.open(info.url + 'betanalysis', function(status) {
+		console.log("status: " + status);
+		failTest(status);
+		success++;
+
+		// 修改時間
+		passValidation(page, '[data-bind="with: searchtime"] .col-md-2 input', '2017-09-01 00:00');
+		passValidation(page, '[data-bind="with: searchtime"] .col-md-2 ~ .col-md-2 input', '2017-11-01 00:00');
+
+		var levelCount = 0;
+
+		page.onResourceReceived = function(res) {
+			var keepGoing = res.stage === 'end' && /\/apis\/revenue\?/.test(res.url);
+			if (keepGoing) {
+				page.onResourceReceived = function() {};
+				// this timeout is for knockout
+				levelCount++;
+				setTimeout(function() {
+					_capture(page, {
+						name: info.name
+					});
+					if (levelCount === 4) {
+						finishedSignal();
+					}
+				}, 0);
+			}
+		};
+	});
+
+}
+
 var finishedCount = 0;
+
 function finishedSignal() {
 	finishedCount++;
 	if (finishedCount == testList.length) {
